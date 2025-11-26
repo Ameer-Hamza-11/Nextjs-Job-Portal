@@ -4,30 +4,33 @@ import { db } from "@/config/db";
 import { getCurrentUser } from "../auth/server/auth.queries";
 import { employers } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
+import { EmployerProfileData } from "../employers/employers.schema";
 
-const organizationTypeOptions = [
-  "development",
-  "business",
-  "design",
-  "android dev",
-  "cloud business",
-] as const;
-type OrganizationType = (typeof organizationTypeOptions)[number];
+// const organizationTypeOptions = [
+//   "development",
+//   "business",
+//   "design",
+//   "android dev",
+//   "cloud business",
+// ] as const;
+// type OrganizationType = (typeof organizationTypeOptions)[number];
 
-const teamSizeOptions = ["1-5", "6-20", "21-50"] as const;
-type TeamSize = (typeof teamSizeOptions)[number];
+// const teamSizeOptions = ["1-5", "6-20", "21-50"] as const;
+// type TeamSize = (typeof teamSizeOptions)[number];
 
-interface IFormInput {
-  name: string;
-  description: string;
-  yearOfEstablishment: string;
-  location: string;
-  websiteUrl: string;
-  organizationType: OrganizationType;
-  teamSize: TeamSize;
-}
+// interface IFormInput {
+//   name: string;
+//   description: string;
+//   yearOfEstablishment: string;
+//   location: string;
+//   websiteUrl: string;
+//   organizationType: OrganizationType;
+//   teamSize: TeamSize;
+// }
 
-export const updateEmployerProfileAction = async (data: IFormInput) => {
+export const updateEmployerProfileAction = async (
+  data: EmployerProfileData
+) => {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.role !== "employer") {
