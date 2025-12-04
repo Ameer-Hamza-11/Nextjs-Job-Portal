@@ -51,18 +51,6 @@ const EmployerSidebar = () => {
       pathname: normalizedHref === base ? base : `${normalizedHref}{/*}?`,
     });
 
-    // /employer-dashboard/settings/amplye/thapa/id
-
-    // URL: https://www.example.com/employer-dashboard?search=jobs#top
-
-    // {
-    //   protocol: "https",
-    //   hostname: "www.example.com",
-    //   pathname: "/employer-dashboard", // <--- THIS is what we care about
-    //   search:   "?search=jobs",
-    //   hash:     "#top"
-    // }
-
     console.log("pattern: ", pattern);
 
     console.log("inside: ", pattern.test({ pathname }));

@@ -1,51 +1,68 @@
-Part 1: Gather Session Properties
-This part involves collecting all the necessary information to create a new, unique session record.
+# 📝 Tiptap & ProseMirror: The Foundation
 
-Generate the Raw Session Token:
+## 1. What is Tiptap?
 
-Use the built-in crypto module (e.g., crypto.randomBytes()) to create a long, cryptographically strong, raw session token.
+**Tiptap** is a **headless** rich-text editor built on top of **ProseMirror**. It provides ready-made extensions and a friendly API so you don’t have to fight low-level ProseMirror complexities directly.
 
-Note: This raw token is the value that will be sent back to the user's browser in a secure cookie.
+- **Headless:** It manages logic & state, but **you** design the UI (buttons, toolbar, styling).
+- **Engine:** It uses ProseMirror internally as its core engine.
 
-Retrieve User Agent:
+---
 
-Access the request headers (in-built feature in Next.js API routes).
+## 2. What is ProseMirror?
 
-Extract the User-Agent string, which provides details about the client's browser and operating system.
+**ProseMirror** is a low-level JavaScript toolkit for building rich-text editors.
 
-Retrieve IP Address:
+- It provides a powerful **document model** and **plugin system**.
+- **The Catch:** It has **no UI** and is very complex to set up from scratch.
 
-Extract the client's IP address from the request object, typically found in request properties or headers like x-forwarded-for.
+### 💡 Why do we need Tiptap?
 
-Obtain the User ID:
+ProseMirror alone is too low-level for most application developers. Tiptap acts as a wrapper that creates a better developer experience.
 
-This ID is passed as a parameter or variable, usually retrieved immediately after successful user authentication (login).
+**Tiptap provides:**
 
-Part 2: Secure Session Creation and Storage
-Once all four properties are gathered, a function is called to store the session data securely in the sessionTable.
+- **Extensions:** Ready-to-use blocks for bold, italic, lists, code blocks, links, etc.
+- **Framework Bindings:** specific packages like `@tiptap/react`.
+- **Clean API:**
+  - _Instead of:_ Manual ProseMirror transactions.
+  - _You write:_ `editor.chain().focus().toggleBold().run()`
 
-Hash the Session Token:
+> **Summary:** “Tiptap = ProseMirror made friendly for real-world projects.”
 
-Crucial Step: Before storing the token, use the built-in crypto module (e.g., crypto.createHash('sha256')) to hash the raw token securely.
+---
 
-The raw token is never stored in the database.
+# ⚛️ Tiptap React Hooks## 1. useEditor Hook
 
-Insert Data using Drizzle:
+`useEditor` is a React hook that creates and manages a Tiptap editor instance for your component.
 
-Call the simple insert method of Drizzle ORM targeting the sessionTable.
+### How it works:
 
-Pass the following values to the insert query:
+Think of it as: `useEditor = new Editor(...)`, but optimized for the React lifecycle.
 
-The User ID.
+### Why do we need it?
 
-The Hashed Token (not the raw token).
+We need the editor to handle the component lifecycle automatically:
 
-The IP Address.
+1.  **Mounting:** It creates the editor instance once when the component loads.
+2.  **Configuration:** It allows you to set up:
+    - `extensions` (functionality)
+    - `content` (initial text)
+    - `onUpdate` (event handlers)
+3.  **Unmounting:** It properly **destroys** the editor instance to prevent memory leaks when the user leaves the page.
 
-The User Agent.
+---
 
-Note: Also ensure you pass the necessary Drizzle timestamp properties, such as engine.At equivalents, for createdAt, updatedAt, and expiresAt (session expiration).
+## 2. useEditorState Hook
 
-Client Response:
+`useEditorState` is a React hook that listens to **specific parts** of the editor state (like ‘is bold active?’) and re-renders your UI **only** when those parts change.
 
-Set the raw token as an HttpOnly, Secure cookie in the response headers to be stored on the client's browser.
+### How it works:
+
+- It subscribes to Tiptap’s internal updates.
+- It runs a **selector** (a check you define).
+- If the result changes → it calls `setState` → The Toolbar re-renders with the new state.
+
+### Why is this important?
+
+Performance! It ensures your entire app doesn't re-render on every single keystroke, only the parts of the UI (like a bold button highlighting) that need to update.

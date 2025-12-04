@@ -31,59 +31,7 @@ import {
   teamSizes,
 } from "../employers.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-// const organizationTypeOptions = [
-//   "development",
-//   "business",
-//   "design",
-//   "android dev",
-//   "cloud business",
-// ] as const;
-// type OrganizationType = (typeof organizationTypeOptions)[number];
-
-// const teamSizeOptions = ["1-5", "6-20", "21-50"] as const;
-// type TeamSize = (typeof teamSizeOptions)[number];
-
-// Without as const, TypeScript thinks options is just a generic list of strings (string[]). With as const, TypeScript treats it as a Read-Only Tuple. It knows exactly that:
-
-// Index 0 is "development"
-
-// Index 1 is "business"
-
-// Index 2 is "design"
-
-// Nothing else is allowed.
-
-// Imagine a Vending Machine (The Array).
-
-// typeof Machine: Describes the whole machine.
-
-// typeof Machine[0]: Describes only the chips in the first slot.
-
-// typeof Machine[number]: Describes anything that could possibly come out of that machine.
-
-// interface IFormInput {
-//   username: string;
-//   email: string;
-//   name: string;
-//   description: string;
-//   yearOfEstablishment: string;
-//   location: string;
-//   websiteUrl: string;
-//   organizationType: OrganizationType;
-//   teamSize: TeamSize;
-// }
-// Partial<T> is a TypeScript utility type that takes an Interface or Type and makes all of its properties optional.
-
-// 1. Define the SHAPE of the props object
-// interface Props {
-//   initialData?: Partial<EmployerProfileData>; // Key: Type
-// }
-
-// // 2. Use that shape
-// export const EmployerSettingsForm = ({ initialData }: Props) => {
-//   // ...
-// };
+import Tiptap from "@/components/text-editor";
 
 const EmployerSettingsForm = ({
   initialData,
@@ -122,15 +70,6 @@ const EmployerSettingsForm = ({
     <Card className="w-3/4 ">
       <CardContent>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-          {/* <div className="grid w-full max-w-sm items-center gap-3">
-            <Label htmlFor="username">username</Label>
-            <Input id="username" type="text" {...register("username")} />
-          </div>
-          <div className="grid w-full max-w-sm items-center gap-3">
-            <Label htmlFor="email">email</Label>
-            <Input id="email" type="text" {...register("email")} />
-          </div> */}
-          {/* Company Name */}
           <div className="space-y-2">
             <Label htmlFor="companyName">Company Name *</Label>
             <div className="relative">
@@ -147,8 +86,9 @@ const EmployerSettingsForm = ({
               <p className="text-sm text-destructive">{errors.name.message}</p>
             )}
           </div>
+
           {/* Description */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="description">Company Description *</Label>
             <div className="relative">
               <FileText className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
@@ -164,7 +104,27 @@ const EmployerSettingsForm = ({
                 {errors.description.message}
               </p>
             )}
+          </div> */}
+
+          <div className="space-y-2">
+            <Controller
+              name="description"
+              control={control}
+              render={({ field, fieldState }) => (
+                <div className="space-y-2">
+                  <Label>Description *</Label>
+                  <Tiptap content={field.value} onChange={field.onChange} />
+
+                  {fieldState.error && (
+                    <p className="text-sm text-destructive">
+                      {fieldState.error.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
           </div>
+
           {/* When you run const { control } = useForm(), you create a specific instance of a form. The <Controller /> component is isolated; it doesn't know which form it belongs to. Passing control={control} connects this specific input to that specific useForm hook. */}
           {/* Organization Type and Team Size - Two columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
