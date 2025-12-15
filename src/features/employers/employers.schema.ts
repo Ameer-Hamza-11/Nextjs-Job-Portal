@@ -85,7 +85,9 @@ export const employerProfileSchema = z.object({
     .or(z.literal("")), // here empty string would fall under minimum length validation, so user will see error if they clear the field
   // so we need to do this
 
-  //   avatarUrl: z.url("Please upload the image"),
+  avatarUrl: z.url("Please upload the image"),
+
+  bannerImageUrl: z.url("Please upload the image").optional().or(z.literal("")),
 });
 
 export type EmployerProfileData = z.infer<typeof employerProfileSchema>;

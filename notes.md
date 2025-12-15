@@ -96,3 +96,66 @@ Use FloatingMenu when:
 - You want a Notion-like block insert menu on empty lines
 
 “User is on an empty line → show FloatingMenu with block options.”
+
+---
+
+1. What getRootProps() Returns
+   getRootProps() comes from React Dropzone. It returns an object containing event handlers and accessibility attributes required for the drag-and-drop area.
+
+The returned object looks like this:
+
+{
+onClick, // Handles the click to open file picker
+onDragEnter, // Visual feedback when dragging enters
+onDragLeave, // Visual feedback when dragging leaves
+onDragOver, // Allows the drop event
+onDrop, // The core function receiving the files
+role, // Accessibility (e.g., "presentation")
+tabIndex, // Keyboard navigation support
+aria-\* // Accessibility attributes
+}
+
+2. Why We Spread It ({...getRootProps()})
+   We spread this object onto the container div to wire up all those event listeners automatically.
+
+<div {...getRootProps()}>
+  {/* Content */}
+</div>
+
+"This makes the entire div behave like a file input. It tells React: 'If anyone drops a file on this specific div, trigger the onDrop function immediately.'"
+
+3. The Hidden Input Logic
+   Why do we need a hidden input? Only an <input type="file"> element has the native browser capability to open the OS file picker window. The div is just for custom UI; the hidden input does the heavy lifting.
+
+🔄 Workflow: What happens when the user clicks?
+User clicks the Container <div {...getRootProps()}>
+
+React Dropzone programmatically triggers the Hidden Input
+
+The native File Picker window opens
+
+User selects a file
+
+The Input fires the onChange event
+
+React Dropzone catches this and calls onDrop
+
+Finally, your handleFileSelect() executes
+
+Summary: "This hidden input is the bridge between browser security and our custom UI."
+
+4. UploadThing Technical Note
+   Important Type Definition:
+
+The function startUpload is defined to accept an Array of Files, not a single File object.
+
+❌ Incorrect: File (Single Object)
+
+✅ Correct: File[] (Array of Files)
+
+Reason: UploadThing is designed to handle multiple file uploads by default, so it always expects the data to be wrapped in an array, even if you are only uploading one file.
+
+TypeScript
+
+// Example usage
+startUpload([selectedFile]); // Must pass as array
