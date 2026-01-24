@@ -35,43 +35,22 @@ import { Button } from "@/components/ui/button";
 import Tiptap from "@/components/text-editor";
 import { JobFormData, jobSchema } from "../jobs/jobs.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import {
+  createJobAction,
+  updateJobAction,
+} from "@/features/server/jobs.actions";
+import { useRouter } from "next/navigation";
 
-// export type SalaryCurrency = (typeof SALARY_CURRENCY)[number];
-// export type SalaryPeriod = (typeof SALARY_PERIOD)[number];
+interface JobPostFormProps {
+  initialData?: any; // The job data fetched from DB
+  isEditMode?: boolean; // Flag to tell form what to do
+}
 
-// export type JobType = (typeof JOB_TYPE)[number];
-// export type WorkType = (typeof WORK_TYPE)[number];
-
-// export type JobLevel = (typeof JOB_LEVEL)[number];
-// export type MinEducation = (typeof MIN_EDUCATION)[number];
-
-// interface JobFormValues {
-//   title: string;
-//   description: string;
-
-//   tags?: string; // comma-separated or space-separated
-
-//   minSalary?: number;
-//   maxSalary?: number;
-
-//   salaryCurrency?: SalaryCurrency;
-//   salaryPeriod?: SalaryPeriod;
-
-//   location?: string;
-
-//   jobType?: JobType;
-//   workType?: WorkType;
-//   jobLevel?: JobLevel;
-
-//   experience?: string;
-//   minEducation?: MinEducation;
-
-//   isFeatured: boolean;
-
-//   expiresAt?: string; // YYYY-MM-DD (HTML date input)
-// }
-
-export const JobForm = () => {
+export const JobForm = ({
+  initialData,
+  isEditMode = false,
+}: JobPostFormProps) => {
   const {
     register,
     control,
@@ -79,14 +58,61 @@ export const JobForm = () => {
     formState: { errors, isDirty, isSubmitting },
   } = useForm({
     resolver: zodResolver(jobSchema),
+    defaultValues: initialData
+      ? {
+          ...initialData,
+          // FIX 1: Handle Date Format
+          expiresAt: initialData.expiresAt
+            ? new Date(initialData.expiresAt).toISOString().split("T")[0] //"2026-01-20T18:15:00.000Z"
+            : "",
+        }
+      : {
+          title: "",
+          description: "",
+
+          jobType: undefined,
+          workType: undefined,
+          jobLevel: undefined,
+
+          location: "",
+          tags: "",
+
+          minSalary: "",
+          maxSalary: "",
+          salaryCurrency: undefined,
+          salaryPeriod: undefined,
+
+          minEducation: undefined,
+          experience: "",
+          expiresAt: "",
+        },
   });
 
+  const router = useRouter();
+
   const handleFormSubmit = async (data: JobFormData) => {
-    const response = await createJobAction(data);
+    try {
+      let response;
+      if (isEditMode && initialData) {
+        // --- UPDATE FLOW ---
+        response = await updateJobAction(initialData.id, data);
+      } else {
+        // --- CREATE FLOW ---
+        response = await createJobAction(data);
+      }
+      // const response = await createJobAction(data);
+      if (response.status === "SUCCESS") {
+        toast.success(response.message);
+        router.push("/employer-dashboard/jobs");
+        // router.refresh(); // Ensure the list page shows new data
+      } else toast.error(response.message);
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
   };
 
   return (
-    <Card className="w-3/4 ">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardContent>
         <form className="space-y-6" onSubmit={handleSubmit(handleFormSubmit)}>
           <div className="space-y-2">
@@ -103,7 +129,9 @@ export const JobForm = () => {
               />
             </div>
             {errors.title && (
-              <p className="text-sm text-destructive">{errors.title.message}</p>
+              <p className="text-sm text-destructive">
+                {errors.title.message as string}
+              </p>
             )}
           </div>
 
@@ -122,7 +150,7 @@ export const JobForm = () => {
                         id="jobType"
                         className={cn(
                           "pl-10 w-full",
-                          errors.jobType && "border-destructive"
+                          errors.jobType && "border-destructive",
                         )}
                       >
                         <SelectValue placeholder="Select job type" />
@@ -140,7 +168,7 @@ export const JobForm = () => {
               />
               {errors.jobType && (
                 <p className="text-sm text-destructive">
-                  {errors.jobType.message}
+                  {errors.jobType.message as string}
                 </p>
               )}
             </div>
@@ -158,7 +186,7 @@ export const JobForm = () => {
                         id="workType"
                         className={cn(
                           "pl-10 w-full",
-                          errors.workType && "border-destructive"
+                          errors.workType && "border-destructive",
                         )}
                       >
                         <SelectValue placeholder="Select work type" />
@@ -176,7 +204,7 @@ export const JobForm = () => {
               />
               {errors.workType && (
                 <p className="text-sm text-destructive">
-                  {errors.workType.message}
+                  {errors.workType.message as string}
                 </p>
               )}
             </div>
@@ -194,7 +222,7 @@ export const JobForm = () => {
                         id="jobLevel"
                         className={cn(
                           "pl-10 w-full",
-                          errors.jobLevel && "border-destructive"
+                          errors.jobLevel && "border-destructive",
                         )}
                       >
                         <SelectValue placeholder="Select job level" />
@@ -212,7 +240,7 @@ export const JobForm = () => {
               />
               {errors.jobLevel && (
                 <p className="text-sm text-destructive">
-                  {errors.jobLevel.message}
+                  {errors.jobLevel.message as string}
                 </p>
               )}
             </div>
@@ -230,7 +258,7 @@ export const JobForm = () => {
                   placeholder="e.g., New York, NY or Remote"
                   className={cn(
                     "pl-10",
-                    errors.location && "border-destructive"
+                    errors.location && "border-destructive",
                   )}
                   {...register("location")}
                   aria-invalid={!!errors.location}
@@ -238,7 +266,7 @@ export const JobForm = () => {
               </div>
               {errors.location && (
                 <p className="text-sm text-destructive">
-                  {errors.location.message}
+                  {errors.location.message as string}
                 </p>
               )}
             </div>
@@ -258,7 +286,7 @@ export const JobForm = () => {
               </div>
               {errors.tags && (
                 <p className="text-sm text-destructive">
-                  {errors.tags.message}
+                  {errors.tags.message as string}
                 </p>
               )}
             </div>
@@ -277,7 +305,7 @@ export const JobForm = () => {
                   placeholder="e.g., 50000"
                   className={cn(
                     "pl-10",
-                    errors.minSalary && "border-destructive"
+                    errors.minSalary && "border-destructive",
                   )}
                   {...register("minSalary")}
                   aria-invalid={!!errors.minSalary}
@@ -285,7 +313,7 @@ export const JobForm = () => {
               </div>
               {errors.minSalary && (
                 <p className="text-sm text-destructive">
-                  {errors.minSalary.message}
+                  {errors.minSalary.message as string}
                 </p>
               )}
             </div>
@@ -301,7 +329,7 @@ export const JobForm = () => {
                   placeholder="e.g., 80000"
                   className={cn(
                     "pl-10",
-                    errors.maxSalary && "border-destructive"
+                    errors.maxSalary && "border-destructive",
                   )}
                   {...register("maxSalary")}
                   aria-invalid={!!errors.maxSalary}
@@ -309,7 +337,7 @@ export const JobForm = () => {
               </div>
               {errors.maxSalary && (
                 <p className="text-sm text-destructive">
-                  {errors.maxSalary.message}
+                  {errors.maxSalary.message as string}
                 </p>
               )}
             </div>
@@ -325,7 +353,7 @@ export const JobForm = () => {
                       id="salaryCurrency"
                       className={cn(
                         "w-full",
-                        errors.salaryCurrency && "border-destructive"
+                        errors.salaryCurrency && "border-destructive",
                       )}
                     >
                       <SelectValue placeholder="Currency" />
@@ -342,7 +370,7 @@ export const JobForm = () => {
               />
               {errors.salaryCurrency && (
                 <p className="text-sm text-destructive">
-                  {errors.salaryCurrency.message}
+                  {errors.salaryCurrency.message as string}
                 </p>
               )}
             </div>
@@ -358,7 +386,7 @@ export const JobForm = () => {
                       id="salaryPeriod"
                       className={cn(
                         "w-full",
-                        errors.salaryPeriod && "border-destructive"
+                        errors.salaryPeriod && "border-destructive",
                       )}
                     >
                       <SelectValue placeholder="Period" />
@@ -375,7 +403,7 @@ export const JobForm = () => {
               />
               {errors.salaryPeriod && (
                 <p className="text-sm text-destructive">
-                  {errors.salaryPeriod.message}
+                  {errors.salaryPeriod.message as string}
                 </p>
               )}
             </div>
@@ -396,7 +424,7 @@ export const JobForm = () => {
                         id="minEducation"
                         className={cn(
                           "pl-10 w-full",
-                          errors.minEducation && "border-destructive"
+                          errors.minEducation && "border-destructive",
                         )}
                       >
                         <SelectValue placeholder="Select education level" />
@@ -414,7 +442,7 @@ export const JobForm = () => {
               />
               {errors.minEducation && (
                 <p className="text-sm text-destructive">
-                  {errors.minEducation.message}
+                  {errors.minEducation.message as string}
                 </p>
               )}
             </div>
@@ -428,7 +456,7 @@ export const JobForm = () => {
                   type="date"
                   className={cn(
                     "pl-10",
-                    errors.expiresAt && "border-destructive"
+                    errors.expiresAt && "border-destructive",
                   )}
                   {...register("expiresAt")}
                   aria-invalid={!!errors.expiresAt}
@@ -436,7 +464,7 @@ export const JobForm = () => {
               </div>
               {errors.expiresAt && (
                 <p className="text-sm text-destructive">
-                  {errors.expiresAt.message}
+                  {errors.expiresAt.message as string}
                 </p>
               )}
             </div>
@@ -455,7 +483,7 @@ export const JobForm = () => {
                 placeholder="e.g., 3+ years of React development"
                 className={cn(
                   "pl-10",
-                  errors.experience && "border-destructive"
+                  errors.experience && "border-destructive",
                 )}
                 {...register("experience")}
                 aria-invalid={!!errors.experience}
@@ -463,7 +491,7 @@ export const JobForm = () => {
             </div>
             {errors.experience && (
               <p className="text-sm text-destructive">
-                {errors.experience.message}
+                {errors.experience.message as string}
               </p>
             )}
           </div>
@@ -495,7 +523,13 @@ export const JobForm = () => {
               className="w-full md:w-auto"
             >
               {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
-              {isSubmitting ? "Saving..." : "Post Job"}
+              {isEditMode
+                ? isSubmitting
+                  ? "Saving..."
+                  : "Update Job"
+                : isSubmitting
+                  ? "Saving..."
+                  : "Post Job"}
             </Button>
             {!isDirty && (
               <p className="text-sm text-muted-foreground">

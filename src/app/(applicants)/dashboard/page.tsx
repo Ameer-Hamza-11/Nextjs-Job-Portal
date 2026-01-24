@@ -3,6 +3,8 @@
 //! app/(dashboard)/users/page.js
 
 import { logoutUserAction } from "@/features/auth/server/auth.actions";
+import { getCurrentUser } from "@/features/auth/server/auth.queries";
+import { redirect } from "next/navigation";
 
 //! What Route Groups Do
 // 1. Organize your project without changing URLs
@@ -14,7 +16,11 @@ import { logoutUserAction } from "@/features/auth/server/auth.actions";
 
 // 3. Better code splitting and maintainability
 
-const ApplicantDashboard = () => {
+const ApplicantDashboard = async () => {
+  const user = await getCurrentUser();
+  console.log("user data employer: ", user);
+
+  if (!user) return redirect("/login");
   return (
     <div>
       <h1>Hello Applicant Dashboard</h1>

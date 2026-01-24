@@ -43,3 +43,47 @@ export const MIN_EDUCATION = [
   "masters",
   "phd",
 ] as const;
+
+import {
+  LayoutDashboard,
+  Search,
+  Briefcase,
+  Bookmark,
+  Settings,
+} from "lucide-react"; // Icons example
+
+// Employer Sidebar Menu
+export const employerSidebarLinks = [
+  { label: "Dashboard", href: "/employer/dashboard", icon: LayoutDashboard },
+  { label: "Find Talents", href: "/employer/talents", icon: Search },
+  // ... other employer links
+];
+
+// Applicant Sidebar Menu (Jo aapne upar list di hai)
+export const applicantSidebarLinks = [
+  {
+    label: "Dashboard",
+    href: "/applicant/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Find Jobs",
+    href: "/applicant/find-jobs",
+    icon: Search,
+  },
+  {
+    label: "My Applications",
+    href: "/applicant/applications",
+    icon: Briefcase,
+  },
+  {
+    label: "Saved Jobs",
+    href: "/applicant/saved-jobs",
+    icon: Bookmark,
+  },
+  {
+    label: "Profile / Settings",
+    href: "/applicant/settings",
+    icon: Settings,
+  },
+];

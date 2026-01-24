@@ -1,12 +1,10 @@
-import { JobForm } from "@/features/employers/components/employer-job-form";
+import { EmployerJobList } from "@/features/employers/components/employer-job-list";
 
-const Jobs = () => {
+export default function JobsPage() {
   return (
-    <div>
-      <h1 className="mb-5 "> Post a New Job </h1>
-      <JobForm />
+    <div className="container mx-auto py-6">
+      <h1 className="text-2xl font-bold mb-6">My Job Posts</h1>
+      <EmployerJobList />
     </div>
   );
-};
-
-export default Jobs;
+}

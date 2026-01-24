@@ -113,7 +113,7 @@ export const jobs = mysqlTable("jobs", {
   experience: text("experience"),
   minEducation: mysqlEnum("min_education", MIN_EDUCATION),
   isFeatured: boolean("is_featured").default(false).notNull(),
-  expiresAt: date("expires_at"),
+  expiresAt: timestamp("expires_at"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),

@@ -4,36 +4,31 @@ import { logoutUserAction } from "@/features/auth/server/auth.actions";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  User,
-  Plus,
+  Search,
   Briefcase,
   Bookmark,
-  CreditCard,
-  Building,
   Settings,
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const base = "/employer-dashboard";
+// Base URL set karein
+const base = "/dashboard";
 
+// Applicant specific navigation items
 const navigationItems = [
-  { name: "Overview", icon: LayoutDashboard, href: base + "/" },
-  { name: "Employers Profile", icon: User },
-  { name: "Post a Job", icon: Plus, href: base + "/jobs/create" },
-  { name: "My Jobs", icon: Briefcase, href: base + "/jobs" },
-  { name: "Saved Candidate", icon: Bookmark },
-  { name: "Plans & Billing", icon: CreditCard },
-  { name: "All Companies", icon: Building },
+  { name: "Home", icon: LayoutDashboard, href: base + "/" },
+  { name: "Find Jobs", icon: Search, href: base + "/find-jobs" },
+  { name: "Applied", icon: Briefcase, href: base + "/applications" },
+  { name: "Saved Jobs", icon: Bookmark, href: base + "/saved-jobs" },
   { name: "Settings", icon: Settings, href: base + "/settings" },
 ];
 
-const EmployerSidebar = () => {
+const ApplicantSidebar = () => {
   const pathname = usePathname();
-  console.log("usepathname: ", pathname);
 
-  // to check the link of the matching sidebar
+  // Same logic as EmployerSidebar for consistency
   function isLinkActive({
     href,
     pathname,
@@ -43,25 +38,25 @@ const EmployerSidebar = () => {
     pathname: string;
     base?: string;
   }) {
-    const normalizedHref = href.replace(/\/$/, "") || "/";
-
-    // URLPattern is a built-in browser API that lets you define URL matching patterns using a template-like syntax.
-
-    const pattern = new URLPattern({
-      pathname: normalizedHref === base ? base : `${normalizedHref}{/*}?`,
-    });
-
-    console.log("pattern: ", pattern);
-
-    console.log("inside: ", pattern.test({ pathname }));
-    return pattern.test({ pathname });
+    // Safety check: URLPattern might not exist in all environments (SSR),
+    // but since you are using it in EmployerSidebar, we keep it here.
+    try {
+      const normalizedHref = href.replace(/\/$/, "") || "/";
+      const pattern = new URLPattern({
+        pathname: normalizedHref === base ? base : `${normalizedHref}{/*}?`,
+      });
+      return pattern.test({ pathname });
+    } catch (error) {
+      // Fallback agar URLPattern fail ho (optional safety)
+      return pathname.startsWith(href);
+    }
   }
 
   return (
     <div className="w-64 bg-card border-r border-border fixed bottom-0 top-0">
       <div className="p-6">
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-          Employers Dashboard
+          Applicant Dashboard
         </h2>
       </div>
 
@@ -73,17 +68,18 @@ const EmployerSidebar = () => {
             <Link
               key={curNav.name}
               href={curNav.href || "#"}
-              // className=" flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors"
               className={cn(
                 "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                 isLinkActive({
                   href: curNav.href || "#",
                   pathname,
-                  base: "/employer-dashboard",
-                }) && "text-primary bg-blue-300",
+                  base: "/dashboard",
+                })
+                  ? "text-primary bg-blue-300/20" // Note: bg-blue-300 might be too dark, added opacity or stick to your class
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent",
               )}
             >
-              <Icon />
+              <Icon className="h-4 w-4" />
               {curNav.name}
             </Link>
           );
@@ -103,4 +99,4 @@ const EmployerSidebar = () => {
   );
 };
 
-export default EmployerSidebar;
+export default ApplicantSidebar;
