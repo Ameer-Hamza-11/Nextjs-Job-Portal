@@ -157,7 +157,7 @@ const EmployerSettingsForm = ({
                     className={cn(
                       fieldState.error &&
                         "ring-1 ring-destructive/50 rounded-lg",
-                      "h-64 w-64"
+                      "h-64 w-64",
                     )}
                   />
                   {fieldState.error && (
@@ -184,7 +184,7 @@ const EmployerSettingsForm = ({
                     className={cn(
                       fieldState.error &&
                         "ring-1 ring-destructive/50 rounded-lg",
-                      "h-64 w-full"
+                      "h-64 w-full",
                     )}
                   />
                   {fieldState.error && (
@@ -477,7 +477,7 @@ export const ImageUpload = ({
       <div
         className={cn(
           "overflow-hidden border-2 border-border relative group rounded-lg",
-          className
+          className,
         )}
         {...props}
       >
@@ -536,7 +536,7 @@ export const ImageUpload = ({
           ? "border-primary bg-primary/5"
           : "border-muted-foreground/25 hover:border-primary/50",
         isUploading && "opacity-50 pointer-events-none",
-        className
+        className,
       )}
       {...props}
     >

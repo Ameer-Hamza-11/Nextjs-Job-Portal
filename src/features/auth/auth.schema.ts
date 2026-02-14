@@ -14,7 +14,7 @@ export const registerUserSchema = z.object({
     .max(255, "Username must not exceed 255 characters")
     .regex(
       /^[a-zA-Z0-9_-]+$/,
-      "Username can only contain letters, numbers, underscores, and hyphens"
+      "Username can only contain letters, numbers, underscores, and hyphens",
     ),
 
   email: z
@@ -28,7 +28,7 @@ export const registerUserSchema = z.object({
     .min(8, "Password must be at least 8 characters long")
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+      "Password must contain at least one lowercase letter, one uppercase letter, and one number",
     ),
 
   role: z

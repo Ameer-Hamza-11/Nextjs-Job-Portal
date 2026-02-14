@@ -63,7 +63,7 @@ export const employerProfileSchema = z.object({
       },
       {
         message: "Please enter a valid year between 1800 and current year",
-      }
+      },
     ),
 
   websiteUrl: z

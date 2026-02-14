@@ -193,14 +193,14 @@ const ToolBar = ({ editor }: { editor: Editor }) => {
           editorState.isHeading2
             ? "heading2"
             : editorState.isHeading3
-            ? "heading3"
-            : editorState.isHeading4
-            ? "heading4"
-            : editorState.isHeading5
-            ? "heading5"
-            : editorState.isHeading6
-            ? "heading6"
-            : "paragraph"
+              ? "heading3"
+              : editorState.isHeading4
+                ? "heading4"
+                : editorState.isHeading5
+                  ? "heading5"
+                  : editorState.isHeading6
+                    ? "heading6"
+                    : "paragraph"
         }
       >
         <SelectTrigger className="w-[180px]">
