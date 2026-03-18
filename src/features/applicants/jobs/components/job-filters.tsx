@@ -29,7 +29,7 @@ export const JobFilters = () => {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       updateFilters({ search: search });
-    }, 500); // 500ms delay
+    }, 500);
 
     return () => clearTimeout(delayDebounceFn);
   }, [search]);

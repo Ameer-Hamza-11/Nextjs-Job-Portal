@@ -1,8 +1,7 @@
 // src/features/jobs/server/jobs.queries.ts
 import { db } from "@/config/db";
 import { jobs, employers, users } from "@/drizzle/schema";
-import { eq, and, isNull, desc, or, gte, SQL, like } from "drizzle-orm";
-import { JobLevel } from "../types/job.types";
+import { eq, and, isNull, desc, or, gte, SQL, like, sql } from "drizzle-orm";
 
 // 2. Define the Interface
 export interface JobFilterParams {
@@ -10,15 +9,20 @@ export interface JobFilterParams {
   jobType?: string;
   jobLevel?: string;
   workType?: string;
+  page?: number;
+  limit?: number;
 }
 
 export async function getAllJobs(filters: JobFilterParams) {
   console.log("filers real: ", filters);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Reset time to 00:00:00
+  const page = filters.page || 1;
+  const limit = filters.limit || 9;
+  const offset = (page - 1) * limit;
 
-  // Base Rule
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const conditions: (SQL | undefined)[] = [
     isNull(jobs.deletedAt),
     or(isNull(jobs.expiresAt), gte(jobs.expiresAt, today)),
@@ -80,15 +84,28 @@ export async function getAllJobs(filters: JobFilterParams) {
     //   ),
     // )
     .where(and(...conditions))
-    .orderBy(desc(jobs.createdAt));
+    .orderBy(desc(jobs.createdAt))
+    .limit(limit)
+    .offset(offset);
 
-  return jobsData;
+  // 2. Fetch the total count for pagination math
+  const countResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(jobs)
+    .innerJoin(employers, eq(jobs.employerId, employers.id))
+    .innerJoin(users, eq(employers.id, users.id))
+    .where(and(...conditions));
+
+  const totalCount = Number(countResult[0]?.count || 0);
+
+  // Return both the data and the total count
+  return { jobs: jobsData, totalCount };
 }
 
-// 🪄 AUTOMATIC TYPE EXPORT
-// This creates a type based on EXACTLY what getAllJobs returns.
-// If you add a field above, this type updates automatically.
-export type JobCardType = Awaited<ReturnType<typeof getAllJobs>>[number];
+// Ensure the type only extracts the job object shape for JobCards
+export type JobCardType = Awaited<
+  ReturnType<typeof getAllJobs>
+>["jobs"][number];
 
 /**
  * Get a Single Job by ID with full details
