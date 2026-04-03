@@ -1,0 +1,1 @@
+ALTER TABLE `jobs` MODIFY COLUMN `salary_currency` enum('PKR','USD','EUR','GBP','CAD','AUD','JPY','INR','NPR');

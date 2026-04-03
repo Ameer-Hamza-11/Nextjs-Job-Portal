@@ -36,6 +36,13 @@
       "when": 1772497032181,
       "tag": "0004_ambitious_kronos",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1774078634223,
+      "tag": "0005_tiny_the_anarchist",
+      "breakpoints": true
     }
   ]
 }

@@ -34,6 +34,7 @@ function PopoverContent({
           className,
         )}
         {...props}
+        asChild
       />
     </PopoverPrimitive.Portal>
   );

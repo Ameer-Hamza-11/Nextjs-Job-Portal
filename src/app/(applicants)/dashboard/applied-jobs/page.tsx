@@ -118,7 +118,7 @@ export default async function AppliedJobsPage() {
 
                 <CardFooter className="p-6 pt-0 mt-auto">
                   <Button variant="outline" className="w-full" asChild>
-                    <Link href={`/dashboard/jobs/${job.id}`}>
+                    <Link href={`/jobs/${job.id}`}>
                       View Job Details
                     </Link>
                   </Button>

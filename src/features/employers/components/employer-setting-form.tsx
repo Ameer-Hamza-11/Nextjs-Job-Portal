@@ -9,7 +9,6 @@ import {
   Briefcase,
   Building2,
   Calendar,
-  FileText,
   Globe,
   Loader,
   Loader2,
@@ -17,7 +16,6 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -35,7 +33,7 @@ import {
 } from "../employers.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Tiptap from "@/components/text-editor";
-import { UploadButton, useUploadThing } from "@/lib/uploadthing";
+import { useUploadThing } from "@/lib/uploadthing";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ComponentProps, useState } from "react";
@@ -44,14 +42,12 @@ import { useDropzone } from "@uploadthing/react";
 const EmployerSettingsForm = ({
   initialData,
 }: {
-  initialData?: Partial<EmployerProfileData>; // Key: Type
+  initialData?: Partial<EmployerProfileData>;
 }) => {
   const {
     register,
     handleSubmit,
     control,
-    setValue,
-    watch, //Give me the current value of this field in the form state, and re-render this component when it changes.
     formState: { errors, isDirty, isSubmitting },
   } = useForm<EmployerProfileData>({
     defaultValues: {
@@ -68,14 +64,7 @@ const EmployerSettingsForm = ({
     resolver: zodResolver(employerProfileSchema),
   });
 
-  // const avatarUrl = watch("avatarUrl");
-
-  // const handleRemoveAvatar = () => {
-  //   setValue("avatarUrl", ""); //Programmatically update a form field’s value inside react-hook-form.
-  // };
-
   const handleFormSubmit = async (data: EmployerProfileData) => {
-    console.log("data: ", data);
     const response = await updateEmployerProfileAction(data);
     if (response.status === "SUCCESS") {
       toast.success(response.message);
@@ -85,63 +74,15 @@ const EmployerSettingsForm = ({
   };
 
   return (
-    <Card className="w-3/4 ">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardContent>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-          {/* <div> */}
-          {/* <UploadButton
-              endpoint="imageUploader"
-              onClientUploadComplete={(res) => {
-                // Do something with the response
-                console.log("Files: ", res);
-                alert("Upload Completed");
-              }}
-              onUploadError={(error: Error) => {
-                // Do something with the error.
-                alert(`ERROR! ${error.message}`);
-              }}
-            /> */}
-
-          {/* <Label>Company Logo</Label>
-            {avatarUrl ? (
-              <div className="flex items-center gap-4">
-                <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-border">
-                  <Image
-                    src={avatarUrl}
-                    alt="Company logo"
-                    className="w-full h-full object-cover"
-                    width={100}
-                    height={100}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleRemoveAvatar}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Remove Logo
-                </Button>
-              </div>
-            ) : (
-              <UploadButton
-                endpoint="imageUploader"
-                onClientUploadComplete={(res) => {
-                  const profilePic = res[0];
-
-                  setValue("avatarUrl", profilePic.ufsUrl, {
-                    shouldDirty: true,
-                  });
-                  console.log("Files: ", res);
-                }}
-                onUploadError={(error: Error) => {
-                  toast.error(`Upload failed: ${error.message}`);
-                }}
-              />
-            )}
-          </div> */}
-          <div className=" grid lg:grid-cols-[1fr_4fr] gap-6">
+        <form
+          onSubmit={handleSubmit(handleFormSubmit)}
+          className="space-y-6 w-full"
+        >
+          {/* Upload Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_4fr] gap-6">
+            {/* Logo */}
             <Controller
               name="avatarUrl"
               control={control}
@@ -151,13 +92,11 @@ const EmployerSettingsForm = ({
                   <ImageUpload
                     value={field.value}
                     onChange={field.onChange}
-                    boxText={
-                      "A photo larger than 400 pixels works best. Max photo size 5 MB."
-                    }
+                    boxText="A photo larger than 400 pixels works best. Max photo size 5 MB."
                     className={cn(
                       fieldState.error &&
                         "ring-1 ring-destructive/50 rounded-lg",
-                      "h-64 w-64",
+                      "h-64 w-full max-w-[250px]"
                     )}
                   />
                   {fieldState.error && (
@@ -169,6 +108,7 @@ const EmployerSettingsForm = ({
               )}
             />
 
+            {/* Banner */}
             <Controller
               name="bannerImageUrl"
               control={control}
@@ -178,13 +118,11 @@ const EmployerSettingsForm = ({
                   <ImageUpload
                     value={field.value}
                     onChange={field.onChange}
-                    boxText={
-                      "Banner images optimal dimension 1520×400. Supported format JPEG, PNG. Max photo size 5 MB."
-                    }
+                    boxText="Banner images optimal dimension 1520×400. Supported format JPEG, PNG. Max photo size 5 MB."
                     className={cn(
                       fieldState.error &&
                         "ring-1 ring-destructive/50 rounded-lg",
-                      "h-64 w-full",
+                      "h-64 w-full"
                     )}
                   />
                   {fieldState.error && (
@@ -197,42 +135,22 @@ const EmployerSettingsForm = ({
             />
           </div>
 
+          {/* Company Name */}
           <div className="space-y-2">
-            <Label htmlFor="companyName">Company Name *</Label>
+            <Label>Company Name *</Label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                id="companyName"
-                type="text"
                 placeholder="Enter company name"
-                className={`pl-10 ${errors.name ? "border-destructive" : ""} `}
+                className={`pl-10 w-full ${
+                  errors.name ? "border-destructive" : ""
+                }`}
                 {...register("name")}
               />
             </div>
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
           </div>
 
           {/* Description */}
-          {/* <div className="space-y-2">
-            <Label htmlFor="description">Company Description *</Label>
-            <div className="relative">
-              <FileText className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Textarea
-                id="description"
-                placeholder="Tell us about your company, what you do, and your mission..."
-                className="pl-10 min-h-[120px] resize-none "
-                {...register("description")}
-              />
-            </div>
-            {errors.description && (
-              <p className="text-sm text-destructive">
-                {errors.description.message}
-              </p>
-            )}
-          </div> */}
-
           <div className="space-y-2">
             <Controller
               name="description"
@@ -241,7 +159,6 @@ const EmployerSettingsForm = ({
                 <div className="space-y-2">
                   <Label>Description *</Label>
                   <Tiptap content={field.value} onChange={field.onChange} />
-
                   {fieldState.error && (
                     <p className="text-sm text-destructive">
                       {fieldState.error.message}
@@ -252,142 +169,112 @@ const EmployerSettingsForm = ({
             />
           </div>
 
-          {/* When you run const { control } = useForm(), you create a specific instance of a form. The <Controller /> component is isolated; it doesn't know which form it belongs to. Passing control={control} connects this specific input to that specific useForm hook. */}
-          {/* Organization Type and Team Size - Two columns */}
+          {/* Selects */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Organization Type */}
-            <div className="space-y-2">
-              <Label htmlFor="organizationType">Organization Type *</Label>
-
-              <Controller
-                name="organizationType"
-                control={control}
-                render={({ field }) => (
+            <Controller
+              name="organizationType"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <Label>Organization Type *</Label>
                   <div className="relative">
-                    <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="pl-10 w-full ">
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger className="pl-10 w-full">
                         <SelectValue placeholder="Select organization type" />
                       </SelectTrigger>
                       <SelectContent>
                         {organizationTypes.map((type) => (
                           <SelectItem key={type} value={type}>
-                            {/* {capitalizeWords(type)} */}
                             {type}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                )}
-              />
-              {errors.organizationType && (
-                <p className="text-sm text-destructive">
-                  {errors.organizationType.message}
-                </p>
+                </div>
               )}
-            </div>
+            />
 
-            {/* Organization Type */}
-            <div className="space-y-2">
-              <Label htmlFor="teamSize">Team Size *</Label>
-              <Controller
-                name="teamSize"
-                control={control}
-                render={({ field }) => (
+            <Controller
+              name="teamSize"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <Label>Team Size *</Label>
                   <div className="relative">
-                    <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="pl-10 w-full ">
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger className="pl-10 w-full">
                         <SelectValue placeholder="Select Team Size" />
                       </SelectTrigger>
                       <SelectContent>
                         {teamSizes.map((type) => (
                           <SelectItem key={type} value={type}>
-                            {/* {capitalizeWords(type)} */}
                             {type}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                )}
-              />
-              {errors.teamSize && (
-                <p className="text-sm text-destructive">
-                  {errors.teamSize.message}
-                </p>
+                </div>
               )}
-            </div>
+            />
           </div>
 
-          {/* Year of Establishment and Location - Two columns */}
+          {/* Year + Location */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="yearOfEstablishment">
-                Year of Establishment *
-              </Label>
+              <Label>Year of Establishment *</Label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  id="yearOfEstablishment"
-                  type="text"
                   placeholder="e.g., 2020"
                   maxLength={4}
-                  className="pl-10"
+                  className="pl-10 w-full"
                   {...register("yearOfEstablishment")}
                 />
               </div>
-              {errors.yearOfEstablishment && (
-                <p className="text-sm text-destructive">
-                  {errors.yearOfEstablishment.message}
-                </p>
-              )}
             </div>
 
-            {/* Year of Establishment and Location - Two columns */}
             <div className="space-y-2">
-              <Label htmlFor="location">Location *</Label>
-
+              <Label>Location *</Label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  id="location"
-                  type="text"
                   placeholder="e.g., Pune, Bangalore"
-                  className="pl-10"
+                  className="pl-10 w-full"
                   {...register("location")}
                 />
               </div>
             </div>
-            {errors.location && (
-              <p className="text-sm text-destructive">
-                {errors.location.message}
-              </p>
-            )}
           </div>
-          {/* Website URL */}
+
+          {/* Website */}
           <div className="space-y-2">
-            <Label htmlFor="websiteUrl">Website URL (Optional)</Label>
+            <Label>Website URL (Optional)</Label>
             <div className="relative">
-              <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                id="websiteUrl"
-                type="text"
                 placeholder="https://www.yourcompany.com"
-                className="pl-10"
+                className="pl-10 w-full"
                 {...register("websiteUrl")}
               />
             </div>
-            {errors.websiteUrl && (
-              <p className="text-sm text-destructive">
-                {errors.websiteUrl.message}
-              </p>
-            )}
           </div>
-          <div className="flex items-center gap-4 pt-4">
-            <Button type="submit">
-              {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
+
+          {/* Button */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-4">
+            <Button type="submit" className="w-full sm:w-auto">
+              {isSubmitting && (
+                <Loader className="w-4 h-4 animate-spin mr-2" />
+              )}
               {isSubmitting ? "Saving Changes..." : "Save Changes"}
             </Button>
 
@@ -404,6 +291,8 @@ const EmployerSettingsForm = ({
 };
 
 export default EmployerSettingsForm;
+
+
 
 type ImageUploadProps = Omit<ComponentProps<"div">, "onChange"> & {
   value?: string;

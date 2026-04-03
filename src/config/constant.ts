@@ -12,6 +12,7 @@ export const SESSION_LIFETIME = 30 * 24 * 60 * 60;
 export const SESSION_REFRESH_TIME = SESSION_LIFETIME / 2;
 
 export const SALARY_CURRENCY = [
+  "PKR",
   "USD",
   "EUR",
   "GBP",
@@ -90,12 +91,12 @@ export const applicantNavItems: NavItem[] = [
     icon: Briefcase,
     badge: "dynamic", // Will show count of applied jobs
   },
-  {
-    name: "Saved Jobs",
-    href: "/dashboard/saved-jobs",
-    icon: Bookmark,
-    badge: "dynamic", // Will show count of saved jobs
-  },
+  // {
+  //   name: "Saved Jobs",
+  //   href: "/dashboard/saved-jobs",
+  //   icon: Bookmark,
+  //   badge: "dynamic", // Will show count of saved jobs
+  // },
   {
     name: "Settings",
     href: "/dashboard/settings",

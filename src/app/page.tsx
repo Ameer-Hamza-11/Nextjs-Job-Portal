@@ -148,9 +148,9 @@ export default async function HomePage() {
       <footer className="bg-gray-900 text-gray-300 py-12">
         <div className="container mx-auto max-w-7xl px-4 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 font-bold text-xl text-white">
-            <Briefcase className="w-6 h-6" /> thapajob
+            <Briefcase className="w-6 h-6" /> Job-Potal
           </div>
-          <p className="text-sm">© {new Date().getFullYear()} thapajob.</p>
+          <p className="text-sm">© {new Date().getFullYear()} Build By Ameer Hamza.</p>
         </div>
       </footer>
     </div>

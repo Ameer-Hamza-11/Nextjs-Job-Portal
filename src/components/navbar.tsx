@@ -15,7 +15,7 @@ export default async function Navbar() {
           className="flex items-center gap-2 font-bold text-xl text-blue-600"
         >
           <Briefcase className="w-6 h-6" />
-          thapajob
+          Job-Portal
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
