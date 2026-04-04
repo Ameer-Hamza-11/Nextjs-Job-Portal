@@ -6,7 +6,7 @@ import {
   ApplicantSettingsSchema,
 } from "../applicant.schema";
 import { db } from "@/config/db";
-import { applicants, resumes, users } from "@/drizzle/schema";
+import { applicants, employers, resumes, users } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -125,3 +125,47 @@ export const saveApplicantProfile = async (data: ApplicantSettingsSchema) => {
     return { status: "ERROR", message: "Failed to save Profile." };
   }
 };
+
+
+
+export const getAllEmployersProfileAction = async ()=>{
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { status: "ERROR", message: "Unauthorized" };
+
+    const allEmployers = await db.select({
+      users: {
+        id: users.id,
+        name:users.name,
+        userName: users.userName,
+        
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        avatarUrl: users.avatarUrl,
+    }, employers:{
+      id: employers.id,
+      name: employers.name,
+      description: employers.description,
+      bannerImageUrl: employers.bannerImageUrl,
+      organizationType: employers.organizationType,
+      teamSize: employers.teamSize,
+      yearOfEstablishment: employers.yearOfEstablishment,
+      websiteUrl: employers.websiteUrl,
+      location: employers.location
+    }
+    }).from(users).leftJoin(employers, eq(users.id, employers.id))
+    .where(eq(users.role, "employer"));
+
+    return {
+      status: "SUCCESS",
+      data: allEmployers,
+    };
+
+    
+  } catch (error) {
+    console.error("GET EMPLOYERS ERROR:", error);
+    return { status: "ERROR", message: "Failed to get Employers." };
+
+  }
+
+}

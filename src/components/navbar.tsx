@@ -25,7 +25,7 @@ export default async function Navbar() {
           <Link href="/jobs" className="hover:text-blue-600 transition-colors">
             Find Job
           </Link>
-          <Link href="/" className="hover:text-blue-600 transition-colors">
+          <Link href="/employers" className="hover:text-blue-600 transition-colors">
             Employers
           </Link>
         </nav>
