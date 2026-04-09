@@ -54,7 +54,7 @@ const JobsDetailedPage = async ({ params }: EditJobPageProps) => {
 
   return (
     <div className="container mx-auto max-w-6xl py-10 px-4 space-y-8">
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between border-b pb-8">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justifay-between border-b pb-8">
         <div className="flex gap-5">
           <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border bg-gray-50">
             {job.companyLogo ? (
@@ -125,9 +125,27 @@ const JobsDetailedPage = async ({ params }: EditJobPageProps) => {
               About the Job
             </h2>
             <div
-              className="prose prose-blue max-w-none text-gray-600 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: job.description }}
-            />
+  className="
+    prose prose-blue max-w-none text-gray-600 leading-relaxed 
+    break-words whitespace-normal overflow-x-hidden overflow-y-auto
+
+    [&_*]:max-w-full 
+    [&_*]:break-words 
+    [&_*]:overflow-hidden
+
+    [&_img]:h-auto 
+    [&_img]:max-w-full
+
+    [&_table]:block 
+    [&_table]:w-full 
+    [&_table]:overflow-x-auto
+
+    [&_pre]:whitespace-pre-wrap 
+    [&_pre]:break-words 
+    [&_pre]:max-w-full
+  "
+  dangerouslySetInnerHTML={{ __html: job.description }}
+/>
           </section>
 
           {/* Tags */}

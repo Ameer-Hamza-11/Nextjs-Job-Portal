@@ -1,0 +1,1 @@
+ALTER TABLE `job_alerts` ADD `job_Level` enum('internship','entry level','junior','mid level','senior level','lead','manager','director','executive');

@@ -2,14 +2,14 @@
 
 import { db } from "@/config/db";
 import { getCurrentUser } from "../auth/server/auth.queries";
-import { employers, users } from "@/drizzle/schema";
-import { eq } from "drizzle-orm";
+import { employers, jobApplications, jobs, users } from "@/drizzle/schema";
+import { eq, and, isNull, desc, or, gte, SQL, like, sql, count, inArray } from "drizzle-orm";
 import { EmployerProfileData } from "../employers/employers.schema";
 
 // const organizationTypeOptions = [
 //   "development",
 //   "business",
-//   "design",
+//   "design",  
 //   "android dev",
 //   "cloud business",
 // ] as const;
@@ -82,3 +82,66 @@ export const updateEmployerProfileAction = async (
     };
   }
 };
+
+
+
+export const getAllCounts = async () => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { status: "ERROR", message: "Unauthorized" };
+
+    const employerJobs = await db
+      .select({ id: jobs.id })
+      .from(jobs)
+      .where(eq(jobs.employerId, user.id));
+
+    const jobIds = employerJobs.map(j => j.id);
+
+    if (jobIds.length === 0) {
+      return {
+        totalEmployerJobs: 0,
+        totalApplications: 0,
+      };
+    }
+
+
+    const totalEmployerJobs = employerJobs.length;
+    const totalApplications = await db
+      .select({ count: count() })
+      .from(jobApplications)
+      .where(inArray(jobApplications.jobId, jobIds));
+    return {
+      status: "SUCCESS",
+      data: {
+        totalEmployerJobs: Number(totalEmployerJobs || 0),
+        totalApplications: Number(totalApplications[0]?.count || 0),
+
+      }
+    }
+  } catch (error) {
+    console.error("GET COUNTS ERROR:", error);
+    return { status: "ERROR", message: "Failed to get counts." };
+  }
+}
+
+export const deleteApplicationAction = async (applicantId: number) => {
+  try {
+
+    const user = await getCurrentUser();
+    if (!user) return { status: "ERROR", message: "Unauthorized" };
+
+
+    const [application] = await db.select().from(jobApplications).where(and(
+      eq(jobApplications.applicantId, applicantId),
+    ))
+    if (!application) {
+      return { status: "ERROR", message: "Application Not found" };
+    }
+
+    return { status: "SUCCESS", message: "application deleted successfully" }
+  } catch (error) {
+    console.error("delete Employer profile ERROR:", error);
+    return { status: "ERROR", message: "Failed to get employer." };
+  }
+
+}

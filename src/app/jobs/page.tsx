@@ -33,7 +33,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
       typeof resolvedParams.jobType === "string"
         ? resolvedParams.jobType
         : undefined,
-    jobLevel:
+    jobLevel:   
       typeof resolvedParams.jobLevel === "string"
         ? resolvedParams.jobLevel
         : undefined,

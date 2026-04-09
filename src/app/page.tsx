@@ -61,7 +61,7 @@ function EmployerHome({
             Post jobs, manage applicants, and grow your company with ease.
           </p>
 
-          <Link href="/employer/jobs/new">
+          <Link href="/employer-dashboard/jobs/create">
             <Button size="lg" className="px-10 rounded-full">Post a Job</Button>
           </Link>
         </div>
@@ -82,7 +82,7 @@ function EmployerHome({
                   </p>
 
                   <Button variant="outline" className="mt-4" asChild>
-                    <Link href={`/employer/jobs/${job.id}`}>Manage Job</Link>
+                    <Link href={`/jobs/${job.id}`}>Manage Job</Link>
                   </Button>
                 </CardContent>
               </Card>

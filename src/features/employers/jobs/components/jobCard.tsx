@@ -1,14 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns"; // npm i date-fns
 import { MapPin, Clock, Briefcase, Banknote } from "lucide-react";
 import { JobCardType } from "../server/jobs.queries"; // Import the inferred type
+import { useTransition, useState } from "react";
+import { Star } from "lucide-react";
+import { toggleFavoriteJobAction } from "../server/jobs.action";
 
 interface JobCardProps {
   job: JobCardType;
 }
 
 export const JobCard = ({ job }: JobCardProps) => {
+  const [isFavorite, setIsFavorite] = useState(job.isFavorite || false);
   // Helper to format salary safely
   const formatSalary = () => {
     if (!job.minSalary || !job.maxSalary) return "Not Disclosed";
@@ -18,10 +24,11 @@ export const JobCard = ({ job }: JobCardProps) => {
   return (
     <Link
       href={`/jobs/${job.id}`}
-      className="group flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-md"
+      className="group flex flex-col gap-4 rounded-xl border border-gray-200 bg-whit    e p-5 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-md"
     >
       {/* Header: Logo & Title */}
       <div className="flex items-start justify-between gap-4">
+
         <div className="flex gap-3">
           {/* Company Logo with Fallback */}
           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
@@ -46,6 +53,21 @@ export const JobCard = ({ job }: JobCardProps) => {
             <p className="text-sm text-gray-500">{job.companyName}</p>
           </div>
         </div>
+        <button
+  onClick={async (e) => {
+    e.preventDefault(); // Prevent Link navigation
+
+    const res = await toggleFavoriteJobAction(job.id);
+    setIsFavorite(res.status === "ADDED");
+  }}
+  className="rounded-full p-1 transition hover:bg-gray-200"
+>
+  <Star
+    className={`h-5 w-5 ${
+      isFavorite ? "fill-yellow-400 text-yellow-500" : "text-gray-400"
+    }`}
+  />
+</button>
       </div>
 
       {/* Badges */}
@@ -79,3 +101,4 @@ export const JobCard = ({ job }: JobCardProps) => {
     </Link>
   );
 };
+

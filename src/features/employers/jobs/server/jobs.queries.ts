@@ -1,6 +1,7 @@
 // src/features/jobs/server/jobs.queries.ts
 import { db } from "@/config/db";
-import { jobs, employers, users } from "@/drizzle/schema";
+import { jobs, employers, users, favoriteJobs } from "@/drizzle/schema";
+import { getCurrentUser } from "@/features/auth/server/auth.queries";
 import { eq, and, isNull, desc, or, gte, SQL, like, sql } from "drizzle-orm";
 
 // 2. Define the Interface
@@ -88,6 +89,18 @@ export async function getAllJobs(filters: JobFilterParams) {
     .limit(limit)
     .offset(offset);
 
+    const user = await getCurrentUser();
+let favoriteSet = new Set<number>();
+
+if (user) {
+  const favs = await db
+    .select()
+    .from(favoriteJobs)
+    .where(eq(favoriteJobs.applicantId, user.id));
+
+  favoriteSet = new Set(favs.map((f) => f.jobId));
+}
+
   // 2. Fetch the total count for pagination math
   const countResult = await db
     .select({ count: sql<number>`count(*)` })
@@ -99,13 +112,17 @@ export async function getAllJobs(filters: JobFilterParams) {
   const totalCount = Number(countResult[0]?.count || 0);
 
   // Return both the data and the total count
-  return { jobs: jobsData, totalCount };
+  return {
+    jobs: jobsData.map((job) => ({
+      ...job,
+      isFavorite: favoriteSet.has(job.id),
+    })),
+    totalCount,
+  };
 }
 
 // Ensure the type only extracts the job object shape for JobCards
-export type JobCardType = Awaited<
-  ReturnType<typeof getAllJobs>
->["jobs"][number];
+export type JobCardType = Awaited<ReturnType<typeof getAllJobs>>["jobs"][number];
 
 /**
  * Get a Single Job by ID with full details
@@ -154,6 +171,7 @@ export async function getJobById(jobId: number) {
   // Return the first item (or undefined if not found)
   return job[0];
 }
+
 
 // 🪄 Create the Type for the Details Page
 export type JobDetailsType = Awaited<ReturnType<typeof getJobById>>;

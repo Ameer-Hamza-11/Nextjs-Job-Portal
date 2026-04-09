@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MoreVertical, Building2 } from "lucide-react";
+import Link from "next/link";
 
 type EmployerType = {
   id: string | number;
@@ -22,17 +23,7 @@ export default function EmployerListPage({
   return (
     <div className="w-full">
       {/* ========== TOP BAR: SEARCH + SORT ========== */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <Input
-          placeholder="Search employers..."
-          className="max-w-sm border-foreground/20"
-        />
-
-        <div className="flex gap-3">
-          <Button variant="outline">Sort by Industry</Button>
-          <Button variant="outline">Sort by Employees</Button>
-        </div>
-      </div>
+   
 
       {/* ========== LIST GRID ========== */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -85,7 +76,9 @@ export default function EmployerListPage({
                 </p>
               </div>
 
-              <Button className="w-full mt-4">View Details</Button>
+              <Button className="w-full mt-4" asChild>
+                <Link href={`/employers/${item.id}`}>View Details</Link>
+              </Button>
             </CardContent>
           </Card>
         ))}

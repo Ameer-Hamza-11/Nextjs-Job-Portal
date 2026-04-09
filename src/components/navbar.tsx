@@ -19,15 +19,43 @@ export default async function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <Link href="/" className="hover:text-blue-600 transition-colors">
-            Home
-          </Link>
-          <Link href="/jobs" className="hover:text-blue-600 transition-colors">
-            Find Job
-          </Link>
-          <Link href="/employers" className="hover:text-blue-600 transition-colors">
-            Employers
-          </Link>
+          {user?.role === "employer" ? (
+            <>
+              <Link href="/" className="hover:text-blue-600 transition-colors">
+                Home
+              </Link>
+              <Link
+                href="/employer-dashboard"
+                className="hover:text-blue-600 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/employer-dashboard/applications"
+                className="hover:text-blue-600 transition-colors"
+              >
+                applications
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/" className="hover:text-blue-600 transition-colors">
+                Home
+              </Link>
+              <Link
+                href="/jobs"
+                className="hover:text-blue-600 transition-colors"
+              >
+                Find Job
+              </Link>
+              <Link
+                href="/employers"
+                className="hover:text-blue-600 transition-colors"
+              >
+                Employers
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="flex items-center gap-3">
@@ -47,7 +75,7 @@ export default async function Navbar() {
                   href={
                     user.role === "employer"
                       ? "/employer-dashboard"
-                      : "/dashboard/settings"
+                      : "/dashboard"
                   }
                 >
                   Dashboard

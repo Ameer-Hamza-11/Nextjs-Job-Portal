@@ -6,8 +6,8 @@ import {
   ApplicantSettingsSchema,
 } from "../applicant.schema";
 import { db } from "@/config/db";
-import { applicants, employers, resumes, users } from "@/drizzle/schema";
-import { eq } from "drizzle-orm";
+import { applicants, employers, favoriteJobs, jobAlerts, jobs, resumes, users } from "@/drizzle/schema";
+import { and, count, desc, eq, InferSelectModel, isNull, like, or, SQL } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export const saveApplicantProfile = async (data: ApplicantSettingsSchema) => {
@@ -127,41 +127,97 @@ export const saveApplicantProfile = async (data: ApplicantSettingsSchema) => {
 };
 
 
+export interface EmployerFilterParams {
+  search?: string;
+  organizationType?: string;
+}
 
-export const getAllEmployersProfileAction = async ()=>{
+export interface User {
+  id: number;
+  name: string;
+  userName: string;
+  email: string;
+  phoneNumber: string | null;
+  avatarUrl: string | null
+}
+export interface Employer {
+  id: number;
+  name: string | null;
+  description: string | null;
+  bannerImageUrl: string | null;
+  organizationType: string | null;
+  teamSize: string | null;
+  yearOfEstablishment: number | null;
+  websiteUrl: string | null;
+  location: string | null;
+}
+
+
+// export type EmployerType = {
+//  data: { users: User, employers:Employer | null }[] 
+// }
+type GetEmployerReturnType =
+  | { status: "SUCCESS", data: { users: User, employers: Employer | null }[] }
+  | { status: "ERROR", message: string }
+export const getAllEmployersProfileAction = async (filters: EmployerFilterParams): Promise<GetEmployerReturnType> => {
   try {
     const user = await getCurrentUser();
     if (!user) return { status: "ERROR", message: "Unauthorized" };
 
+    const conditions: (SQL | undefined)[] = [
+      isNull(employers.deletedAt),
+
+    ];
+
+    if (filters?.search) {
+      const searchTerm = `%${filters.search}%`
+      conditions.push(
+        or(
+          like(employers.name, searchTerm),
+          like(users.name, searchTerm)
+        )
+      )
+    }
+
+
+    if (filters?.organizationType && filters.organizationType !== "all") {
+      conditions.push(eq(employers.organizationType, filters.organizationType as any));
+    }
+
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const allEmployers = await db.select({
       users: {
         id: users.id,
-        name:users.name,
+        name: users.name,
         userName: users.userName,
-        
+
         email: users.email,
         phoneNumber: users.phoneNumber,
         avatarUrl: users.avatarUrl,
-    }, employers:{
-      id: employers.id,
-      name: employers.name,
-      description: employers.description,
-      bannerImageUrl: employers.bannerImageUrl,
-      organizationType: employers.organizationType,
-      teamSize: employers.teamSize,
-      yearOfEstablishment: employers.yearOfEstablishment,
-      websiteUrl: employers.websiteUrl,
-      location: employers.location
-    }
+      }, employers: {
+        id: employers.id,
+        name: employers.name,
+        description: employers.description,
+        bannerImageUrl: employers.bannerImageUrl,
+        organizationType: employers.organizationType,
+        teamSize: employers.teamSize,
+        yearOfEstablishment: employers.yearOfEstablishment,
+        websiteUrl: employers.websiteUrl,
+        location: employers.location
+      }
     }).from(users).leftJoin(employers, eq(users.id, employers.id))
-    .where(eq(users.role, "employer"));
+      .where(and(eq(users.role, "employer"), ...conditions))
+      .orderBy(desc(employers.createdAt));
 
     return {
       status: "SUCCESS",
       data: allEmployers,
     };
 
-    
+
   } catch (error) {
     console.error("GET EMPLOYERS ERROR:", error);
     return { status: "ERROR", message: "Failed to get Employers." };
@@ -169,3 +225,88 @@ export const getAllEmployersProfileAction = async ()=>{
   }
 
 }
+
+
+export const getAllCounts = async () => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { status: "ERROR", message: "Unauthorized" };
+
+    const totalAppliedJobs = await await db.select({ count: count() }).from(applicants).where(eq(applicants.id, user.id));
+
+    const totalSavedJobs = await db.select({ count: count() }).from(favoriteJobs).where(eq(favoriteJobs.applicantId, user.id));
+
+    const [jobAlert] = await db.select().from(jobAlerts).where(eq(jobAlerts.applicantId, user.id));
+    const totalJobAlerts = await db.select({ count: count() }).from(jobs).where(
+      or(
+        jobAlert?.keywords ? like(jobs.title, `%${jobAlert.keywords}%`) : undefined,
+        jobAlert?.location ? like(jobs.location, `%${jobAlert.location}%`) : undefined,
+        jobAlert?.workType ? like(jobs.workType, `%${jobAlert.workType}%`) : undefined,
+        jobAlert?.jobType ? like(jobs.jobType, `%${jobAlert.jobType}%`) : undefined,
+        jobAlert?.minSalary  ? like(jobs.minSalary, `%${jobAlert.minSalary}%`) : undefined,
+        jobAlert?.keywords  ? like(jobs.tags, `%${jobAlert.keywords}%`) : undefined,
+      )
+    )
+
+    return {
+      status: "SUCCESS",
+      data: {
+        totalAppliedJobs: Number(totalAppliedJobs[0]?.count || 0),
+        totalSavedJobs: Number(totalSavedJobs[0]?.count || 0),
+        totalJobAlerts: Number(totalJobAlerts[0]?.count || 0)
+      }
+    }
+  } catch (error) {
+    console.error("GET COUNTS ERROR:", error);
+    return { status: "ERROR", message: "Failed to get counts." };
+  }
+}
+
+
+type GetSingleEmployerReturnType =
+  | { status: "SUCCESS", data: { users: User, employers: Employer | null } }
+  | { status: "ERROR", message: string }
+export const getEmployerProfileAction = async (employerId: string): Promise<GetSingleEmployerReturnType> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { status: "ERROR", message: "Unauthorized" };
+
+    const [empoyerProfile] = await db.select({
+      users: {
+        id: users.id,
+        name: users.name,
+        userName: users.userName,
+
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        avatarUrl: users.avatarUrl,
+      }, employers: {
+        id: employers.id,
+        name: employers.name,
+        description: employers.description,
+        bannerImageUrl: employers.bannerImageUrl,
+        organizationType: employers.organizationType,
+        teamSize: employers.teamSize,
+        yearOfEstablishment: employers.yearOfEstablishment,
+        websiteUrl: employers.websiteUrl,
+        location: employers.location
+      }
+    }).from(users).leftJoin(employers, eq(users.id, employers.id)).where(and(eq(users.id, Number(employerId)), eq(users.role, "employer"))).limit(1);
+
+    if (!empoyerProfile) {
+      return { status: "ERROR", message: "Employer not found." };
+    }
+
+
+    return {
+      status: "SUCCESS",
+      data: empoyerProfile,
+    };
+
+  } catch (error) {
+    console.error("GET Employer profile ERROR:", error);
+    return { status: "ERROR", message: "Failed to get employer." };
+
+  }
+}
+

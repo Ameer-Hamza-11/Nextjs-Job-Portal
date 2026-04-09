@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
 import {
   Select,
   SelectContent,
@@ -23,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import { Label } from "@/components/ui/label";
 import { applyJobSchema, ApplyJobSchema } from "../../apply-job.schema";
 
@@ -50,7 +52,7 @@ export const ApplyJobModal = ({
   } = useForm<ApplyJobSchema>({
     resolver: zodResolver(applyJobSchema),
     defaultValues: {
-      jobId: jobId,
+      jobId,
       resumeId: resumes.length === 1 ? resumes[0].id : undefined,
       coverLetter: "",
     },
@@ -67,7 +69,7 @@ export const ApplyJobModal = ({
       } else {
         toast.error(res.message);
       }
-    } catch (error) {
+    } catch {
       toast.error("Something went wrong.");
     }
   };
@@ -91,19 +93,21 @@ export const ApplyJobModal = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] w-[95%]">
         <DialogHeader>
           <DialogTitle>Apply Job: {jobTitle}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-4">
+          {/* Resume Select */}
           <div className="space-y-2">
             <Label>
               Choose Resume <span className="text-destructive">*</span>
             </Label>
+
             {resumes.length === 0 ? (
               <p className="text-sm text-destructive">
-                Please upload a resume in your profile settings first.
+                Upload a resume in your profile settings first.
               </p>
             ) : (
               <Controller
@@ -111,19 +115,20 @@ export const ApplyJobModal = ({
                 control={control}
                 render={({ field }) => (
                   <Select
-                    value={field.value > 0 ? field.value.toString() : undefined}
-                    onValueChange={(val) => field.onChange(Number(val))}
+                    value={field.value ? String(field.value) : undefined}
+                    onValueChange={(v) => field.onChange(Number(v))}
                   >
                     <SelectTrigger
                       className={errors.resumeId ? "border-destructive" : ""}
                     >
                       <SelectValue placeholder="Choose Resume" />
                     </SelectTrigger>
+
                     <SelectContent>
                       {resumes.map((resume) => (
                         <SelectItem
                           key={resume.id}
-                          value={resume.id.toString()}
+                          value={String(resume.id)}
                         >
                           {resume.fileName}
                         </SelectItem>
@@ -133,6 +138,7 @@ export const ApplyJobModal = ({
                 )}
               />
             )}
+
             {errors.resumeId && (
               <p className="text-sm text-destructive">
                 {errors.resumeId.message}
@@ -145,16 +151,17 @@ export const ApplyJobModal = ({
             <Label>Cover Letter</Label>
             <Textarea
               {...register("coverLetter")}
-              placeholder="Write down your biography here. Let the employers know who you are..."
-              className="min-h-[150px]"
+              placeholder="Introduce yourself briefly..."
+              className="min-h-[150px] w-full"
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-between pt-2">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 pt-2">
             <Button
               type="button"
               variant="secondary"
+              className="w-full sm:w-auto"
               onClick={() => setIsOpen(false)}
             >
               Cancel
@@ -163,7 +170,7 @@ export const ApplyJobModal = ({
             <Button
               type="submit"
               disabled={isSubmitting || resumes.length === 0}
-              className="gap-2"
+              className="w-full sm:w-auto gap-2"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {isSubmitting ? "Applying..." : "Apply Now"}

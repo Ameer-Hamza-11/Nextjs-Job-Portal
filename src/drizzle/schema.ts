@@ -55,7 +55,7 @@ export const employers = mysqlTable("employers", {
   name: varchar("name", { length: 255 }),
   description: text("description"),
   bannerImageUrl: text("banner_image_url"),
-  organizationType: varchar("organization_type", { length: 100 }),
+  organizationType: varchar("organization_type", { length: 100 }),  
   teamSize: varchar("team_size", { length: 50 }),
   yearOfEstablishment: year("year_of_establishment"), // MySQL YEAR type
   websiteUrl: varchar("website_url", { length: 255 }),
@@ -157,6 +157,48 @@ export const jobApplications = mysqlTable("job_applications", {
   appliedAt: timestamp("applied_at").defaultNow().notNull(),
 });
 
+export const favoriteJobs = mysqlTable("favorite_jobs", {
+  id: int("id").autoincrement().primaryKey(),
+
+  applicantId: int("applicant_id")
+    .notNull()
+    .references(() => applicants.id, { onDelete: "cascade" }),
+
+  jobId: int("job_id")
+    .notNull()
+    .references(() => jobs.id, { onDelete: "cascade" }),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const jobAlerts = mysqlTable("job_alerts", {
+  id: int("id").autoincrement().primaryKey(),
+
+  applicantId: int("applicant_id")
+    .notNull()
+    .references(() => applicants.id, { onDelete: "cascade" }),
+
+  // User jo alert search create karega woh simply JSON hoga
+  keywords: varchar("keywords", { length: 255 }),         // e.g. "frontend, react"
+  location: varchar("location", { length: 255 }),         // e.g. "Karachi"
+  jobType: mysqlEnum("job_type", JOB_TYPE),               // optional
+  workType: mysqlEnum("work_type", WORK_TYPE),            // optional
+  jobLevel: mysqlEnum("job_Level", JOB_LEVEL),            // optional
+  minSalary: int("min_salary"),
+  maxSalary: int("max_salary"),
+
+  // Alert on/off toggle
+  isActive: boolean("is_active").default(true).notNull(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const jobAlertsRelations = relations(jobAlerts, ({ one }) => ({
+  applicant: one(applicants, {
+    fields: [jobAlerts.applicantId],
+    references: [applicants.id],
+  }),
+}));
+
 export const jobApplicationsRelations = relations(
   jobApplications,
   ({ one }) => ({
@@ -224,3 +266,17 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const favoriteJobsRelations = relations(
+  favoriteJobs,
+  ({ one }) => ({
+    applicant: one(applicants, {
+      fields: [favoriteJobs.applicantId],
+      references: [applicants.id],
+    }),
+    job: one(jobs, {
+      fields: [favoriteJobs.jobId],
+      references: [jobs.id],
+    }),
+  })
+);
