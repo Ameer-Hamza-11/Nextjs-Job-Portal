@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X, Filter, DollarSign } from "lucide-react";
+import { Search, X, Filter, DollarSign, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,156 +14,122 @@ import {
 import { JOB_TYPE, WORK_TYPE, JOB_LEVEL } from "@/config/constant";
 import { useFilters } from "@/hooks/useFilters";
 import { useJobAlerts } from "@/hooks/useJobAlerts";
+import { toast } from "sonner";
 
 export const JobFilters = () => {
-  // const router = useRouter();
-  // const searchParams = useSearchParams();
-  // console.log("searchParams: ", searchParams);
-  // console.log("searchParams string: ", searchParams.toString());
-
   const { searchParams, updateFilters, clearFilters } = useFilters();
-
   const { createAlert } = useJobAlerts();
-  // Local state for immediate UI feedback
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [jobType, setJobType] = useState(searchParams.get("jobType") || "");
   const [jobLevel, setJobLevel] = useState(searchParams.get("jobLevel") || "");
   const [workType, setWorkType] = useState(searchParams.get("workType") || "");
   const [location, setLocation] = useState(searchParams.get("location") || "");
-  const [minSalary, setMinSalary] = useState(
-    searchParams.get("minSalary") || ""
-  );
-  const [maxSalary, setMaxSalary] = useState(
-    searchParams.get("maxSalary") || ""
-  );
+  const [minSalary, setMinSalary] = useState(searchParams.get("minSalary") || "");
+  const [maxSalary, setMaxSalary] = useState(searchParams.get("maxSalary") || "");
 
+  // Handle search with debounce
   useEffect(() => {
-    const t = setTimeout(() => updateFilters({ search }), 500);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => updateFilters({ search }), 500);
+    return () => clearTimeout(timer);
   }, [search]);
 
-  // const updateFilters = (newParams: Record<string, string | null>) => {
-  //   const params = new URLSearchParams(searchParams.toString());
-  //   console.log("params: ", params);
+  // Handle immediate filter updates for selects
+  const handleJobTypeChange = (val: string) => {
+    const newValue = val === "all" ? "" : val;
+    setJobType(newValue);
+    updateFilters({ jobType: newValue });
+  };
 
-  //   Object.entries(newParams).forEach(([key, value]) => {
-  //     const actualValue = value?.trim();
+  const handleJobLevelChange = (val: string) => {
+    const newValue = val === "all" ? "" : val;
+    setJobLevel(newValue);
+    updateFilters({ jobLevel: newValue });
+  };
 
-  //     if (!actualValue || actualValue === "all") {
-  //       params.delete(key);
-  //     } else {
-  //       params.set(key, actualValue);
-  //     }
-  //   });
+  const handleWorkTypeChange = (val: string) => {
+    const newValue = val === "all" ? "" : val;
+    setWorkType(newValue);
+    updateFilters({ workType: newValue });
+  };
 
-  //   // params.delete("page");
-  //   // or params.set("page", "1");
-  //   // params.set("page", "1");
+  const handleLocationChange = (val: string) => {
+    const newValue = val === "all" ? "" : val;
+    setLocation(newValue);
+    updateFilters({ location: newValue });
+  };
 
-  //   router.push(`?${params.toString()}`, { scroll: false });
-  // };
+  const handleSalaryChange = () => {
+    updateFilters({ minSalary, maxSalary });
+  };
 
-  // const updateFilters = (newParams: Record<string, string | null>) => {
-  //   const params = new URLSearchParams(searchParams.toString());
+  const handleClearAll = () => {
+    setSearch("");
+    setJobType("");
+    setJobLevel("");
+    setWorkType("");
+    setLocation("");
+    setMinSalary("");
+    setMaxSalary("");
+    clearFilters();
+    setIsMobileFiltersOpen(false);
+  };
 
-  //   // 1. Create a tracker to see if anything actually changed
-  //   let filtersChanged = false;
+  const hasActiveFilters = !!(search || jobType || jobLevel || workType || location || minSalary || maxSalary);
 
-  //   Object.entries(newParams).forEach(([key, value]) => {
-  //     const actualValue = value?.trim();
-  //     const currentValue = params.get(key) || "";
-
-  //     if (!actualValue || actualValue === "all") {
-  //       if (params.has(key)) {
-  //         params.delete(key);
-  //         filtersChanged = true;
-  //       }
-  //     } else {
-  //       if (currentValue !== actualValue) {
-  //         params.set(key, actualValue);
-  //         filtersChanged = true;
-  //       }
-  //     }
-  //   });
-
-  //   // 2. ONLY reset the page and push to the router if a filter ACTUALLY changed
-  //   if (filtersChanged) {
-  //     // params.delete("page");
-  //     params.set("page", "1");
-  //     router.push(`?${params.toString()}`, { scroll: false });
-  //   }
-  // };
-
-  // const clearFilters = () => {
-  //   setSearch("");
-  //   setJobType("");
-  //   setJobLevel("");
-  //   setWorkType("");
-
-  //   const pathname = "/jobs";
-  //   router.push(pathname); // Reset to base URL
-  // };
-
-  return (
-    <div className="space-y-4 rounded-xl bg-white p-4 shadow-sm border border-gray-100">
-      {/* --- Row 1: Search --- */}
+  const FilterContent = () => (
+    <div className="space-y-4">
+      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <Input
           placeholder="Search by title, skill, or company..."
-          className="pl-10 h-11 bg-gray-50/50"
+          className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      <div className="grid grid-cols-2 space-y-2 gap-4">
-        <div className="relative">
-          <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            type="number"
-            placeholder="min salary"
-            min={0}
-            className="pl-10 h-11 bg-gray-50/50"
-            value={minSalary}
-            onChange={(e) => {
-              let value = Number(e.target.value);
-              if (value < 0) value = 0;
-
-              setMinSalary(e.target.value);
-            }}
-          />
-        </div>
-        <div className="relative">
-          <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            type="number"
-            min={0}
-            placeholder="min salary"
-            className="pl-10 h-11 bg-gray-50/50"
-            value={maxSalary}
-            onChange={(e) => {
-              let value = Number(e.target.value);
-              if (maxSalary < minSalary) value = Number(minSalary);
-              if (value < 0) value = 0;
-
-              setMaxSalary(e.target.value);
-            }}
-          />
+      {/* Salary Range */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Salary Range</label>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="relative">
+            <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              type="number"
+              placeholder="Min"
+              min={0}
+              className="pl-10 h-11 bg-gray-50"
+              value={minSalary}
+              onChange={(e) => {
+                setMinSalary(e.target.value);
+                handleSalaryChange();
+              }}
+            />
+          </div>
+          <div className="relative">
+            <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              type="number"
+              placeholder="Max"
+              min={0}
+              className="pl-10 h-11 bg-gray-50"
+              value={maxSalary}
+              onChange={(e) => {
+                setMaxSalary(e.target.value);
+                handleSalaryChange();
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* --- Row 2: Filters --- */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Job Type Dropdown */}
-        <Select
-          value={jobType}
-          onValueChange={(val) => {
-            setJobType(val);
-            updateFilters({ jobType: val });
-          }}
-        >
-          <SelectTrigger className="w-[160px] h-9 text-xs">
+      {/* Filters Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Select value={jobType || "all"} onValueChange={handleJobTypeChange}>
+          <SelectTrigger className="h-11 bg-gray-50 text-sm">
             <SelectValue placeholder="Job Type" />
           </SelectTrigger>
           <SelectContent>
@@ -177,36 +142,22 @@ export const JobFilters = () => {
           </SelectContent>
         </Select>
 
-        {/* Job Type Dropdown */}
-        <Select
-          value={jobLevel}
-          onValueChange={(val) => {
-            setJobLevel(val);
-            updateFilters({ jobLevel: val });
-          }}
-        >
-          <SelectTrigger className="w-[160px] h-9 text-xs">
+        <Select value={jobLevel || "all"} onValueChange={handleJobLevelChange}>
+          <SelectTrigger className="h-11 bg-gray-50 text-sm">
             <SelectValue placeholder="Job Level" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Levels</SelectItem>
-            {JOB_LEVEL.map((type) => (
-              <SelectItem key={type} value={type} className="capitalize">
-                {type.replace(/-/g, " ")}
+            {JOB_LEVEL.map((level) => (
+              <SelectItem key={level} value={level} className="capitalize">
+                {level.replace(/-/g, " ")}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        {/* Work Type Dropdown */}
-        <Select
-          value={workType}
-          onValueChange={(val) => {
-            setWorkType(val);
-            updateFilters({ workType: val });
-          }}
-        >
-          <SelectTrigger className="w-[160px] h-9 text-xs">
+        <Select value={workType || "all"} onValueChange={handleWorkTypeChange}>
+          <SelectTrigger className="h-11 bg-gray-50 text-sm">
             <SelectValue placeholder="Work Type" />
           </SelectTrigger>
           <SelectContent>
@@ -218,14 +169,9 @@ export const JobFilters = () => {
             ))}
           </SelectContent>
         </Select>
-        <Select
-          value={location}
-          onValueChange={(val) => {
-            setLocation(val);
-            updateFilters({ location: val });
-          }}
-        >
-          <SelectTrigger className="w-[160px] h-9 text-xs">
+
+        <Select value={location || "all"} onValueChange={handleLocationChange}>
+          <SelectTrigger className="h-11 bg-gray-50 text-sm">
             <SelectValue placeholder="Location" />
           </SelectTrigger>
           <SelectContent>
@@ -235,38 +181,107 @@ export const JobFilters = () => {
             <SelectItem value="Islamabad">Islamabad</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-wrap items-center gap-3 pt-2">
+        <Button
+          size="default"
+          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+          onClick={() => setIsMobileFiltersOpen(false)}
+        >
+          <Search className="h-4 w-4" />
+          Apply Filters
+        </Button>
 
         <Button
           variant="outline"
-          size="sm"
-          className="flex items-center gap-2 text-blue-600 border-blue-300 hover:bg-blue-50"
+          size="default"
+          className="gap-2 border-green-200 text-green-600 hover:bg-green-50"
           onClick={() => {
             createAlert({
               keywords: search || null,
-              location: searchParams.get("location") || null,
-              jobType,
-              jobLevel,
-              workType,
+              location: location || null,
+              jobType: jobType || null,
+              jobLevel: jobLevel || null,
+              workType: workType || null,
             });
+            toast.success("Job alert created successfully!");
           }}
         >
-          <Filter className="w-4 h-4" />
+          <Filter className="h-4 w-4" />
           Save Job Alert
         </Button>
 
-        {/* Reset Button (Only show if filters are active) */}
-        {(search || jobType || jobLevel || workType) && (
+        {hasActiveFilters && (
           <Button
             variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            className="ml-auto text-red-500 hover:text-red-600 hover:bg-red-50"
+            size="default"
+            onClick={handleClearAll}
+            className="text-red-500 hover:text-red-600 hover:bg-red-50"
           >
-            <X className="mr-2 h-3 w-3" />
-            Reset Filters
+            <X className="h-4 w-4 mr-2" />
+            Clear All
           </Button>
         )}
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Filters */}
+      <div className="hidden lg:block">
+        <div className="rounded-xl bg-white p-5 shadow-sm border border-gray-100">
+          <FilterContent />
+        </div>
+      </div>
+
+      {/* Mobile Filters - Custom Modal (No Sheet component) */}
+      <div className="block lg:hidden">
+        <Button
+          onClick={() => setIsMobileFiltersOpen(true)}
+          className="w-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 gap-2 h-12"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filters & Sorting
+          {hasActiveFilters && (
+            <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-xs">
+              Active
+            </span>
+          )}
+        </Button>
+
+        {/* Mobile Filter Modal */}
+        {isMobileFiltersOpen && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/50 z-50"
+              onClick={() => setIsMobileFiltersOpen(false)}
+            />
+            
+            {/* Modal Panel */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-xl transform transition-transform duration-300 ease-out">
+              {/* Header */}
+              <div className="flex items-center justify-between p-5 border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+                <button
+                  onClick={() => setIsMobileFiltersOpen(false)}
+                  className="p-1 rounded-md hover:bg-gray-100 transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+              
+              {/* Content */}
+              <div className="p-5 overflow-y-auto max-h-[70vh]">
+                <FilterContent />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </>
   );
 };

@@ -14,14 +14,19 @@ export default async function DashboardLayout({
   if (user.role !== "applicant") return redirect("/employer-dashboard");
 
   return (
-    <div className="flex min-h-screen bg-background overflow-x-hidden">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <ApplicantSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-64 p-4">
-        <div className="max-w-5xl mx-auto w-full">
-          {children}
+      <main className="flex-1 lg:ml-64 min-h-screen">
+        {/* Mobile Header Spacer */}
+        <div className="lg:hidden h-16" />
+        
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
+          <div className="max-w-7xl mx-auto w-full">
+            {children}
+          </div>
         </div>
       </main>
     </div>

@@ -93,7 +93,7 @@ const EmployerSidebar = () => {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                   isLinkActive({ href: item.href, pathname }) &&
-                    "text-primary bg-blue-300"
+                    "text-primary bg-accent"
                 )}
               >
                 <Icon />

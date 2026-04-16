@@ -123,8 +123,9 @@ export const getAllCounts = async () => {
     return { status: "ERROR", message: "Failed to get counts." };
   }
 }
-
-export const deleteApplicationAction = async (applicantId: number) => {
+type deleteApplicationResponse = 
+{status: "SUCCESS", message: string} | {status: "ERROR", message: string}
+export const deleteApplicationAction = async (applicantId: number):Promise<deleteApplicationResponse> => {
   try {
 
     const user = await getCurrentUser();
@@ -137,6 +138,8 @@ export const deleteApplicationAction = async (applicantId: number) => {
     if (!application) {
       return { status: "ERROR", message: "Application Not found" };
     }
+
+    await db.delete(jobApplications).where(eq(jobApplications.id, application.id))    
 
     return { status: "SUCCESS", message: "application deleted successfully" }
   } catch (error) {
