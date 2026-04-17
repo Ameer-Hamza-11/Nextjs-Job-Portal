@@ -35,6 +35,20 @@ export const JobFilters = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Handle salary with debounce - Fixed to preserve the full value
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Only update if values are different from URL
+      const currentMin = searchParams.get("minSalary") || "";
+      const currentMax = searchParams.get("maxSalary") || "";
+      
+      if (minSalary !== currentMin || maxSalary !== currentMax) {
+        updateFilters({ minSalary, maxSalary });
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [minSalary, maxSalary]);
+
   // Handle immediate filter updates for selects
   const handleJobTypeChange = (val: string) => {
     const newValue = val === "all" ? "" : val;
@@ -58,10 +72,6 @@ export const JobFilters = () => {
     const newValue = val === "all" ? "" : val;
     setLocation(newValue);
     updateFilters({ location: newValue });
-  };
-
-  const handleSalaryChange = () => {
-    updateFilters({ minSalary, maxSalary });
   };
 
   const handleClearAll = () => {
@@ -93,33 +103,37 @@ export const JobFilters = () => {
 
       {/* Salary Range */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Salary Range</label>
+        <label className="text-sm font-medium text-gray-700">Salary Range (per year)</label>
         <div className="grid grid-cols-2 gap-3">
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
-              type="number"
-              placeholder="Min"
-              min={0}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Min Salary"
               className="pl-10 h-11 bg-gray-50"
               value={minSalary}
               onChange={(e) => {
-                setMinSalary(e.target.value);
-                handleSalaryChange();
+                // Allow only numbers
+                const value = e.target.value.replace(/[^0-9]/g, '');
+                setMinSalary(value);
               }}
             />
           </div>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
-              type="number"
-              placeholder="Max"
-              min={0}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Max Salary"
               className="pl-10 h-11 bg-gray-50"
               value={maxSalary}
               onChange={(e) => {
-                setMaxSalary(e.target.value);
-                handleSalaryChange();
+                // Allow only numbers
+                const value = e.target.value.replace(/[^0-9]/g, '');
+                setMaxSalary(value);
               }}
             />
           </div>
@@ -205,6 +219,8 @@ export const JobFilters = () => {
               jobType: jobType || null,
               jobLevel: jobLevel || null,
               workType: workType || null,
+              minSalary: minSalary ? parseInt(minSalary) : null,
+              maxSalary: maxSalary ? parseInt(maxSalary) : null,
             });
             toast.success("Job alert created successfully!");
           }}
@@ -237,7 +253,7 @@ export const JobFilters = () => {
         </div>
       </div>
 
-      {/* Mobile Filters - Custom Modal (No Sheet component) */}
+      {/* Mobile Filters - Custom Modal */}
       <div className="block lg:hidden">
         <Button
           onClick={() => setIsMobileFiltersOpen(true)}
@@ -255,15 +271,11 @@ export const JobFilters = () => {
         {/* Mobile Filter Modal */}
         {isMobileFiltersOpen && (
           <>
-            {/* Backdrop */}
             <div 
               className="fixed inset-0 bg-black/50 z-50"
               onClick={() => setIsMobileFiltersOpen(false)}
             />
-            
-            {/* Modal Panel */}
             <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-xl transform transition-transform duration-300 ease-out">
-              {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-gray-100">
                 <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
                 <button
@@ -273,8 +285,6 @@ export const JobFilters = () => {
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
               </div>
-              
-              {/* Content */}
               <div className="p-5 overflow-y-auto max-h-[70vh]">
                 <FilterContent />
               </div>

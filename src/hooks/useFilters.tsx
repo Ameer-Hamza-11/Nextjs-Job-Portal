@@ -15,7 +15,8 @@ export const useFilters = () => {
       let changed = false;
 
       Object.entries(newParams).forEach(([key, value]) => {
-        const val = value?.trim();
+        // Don't trim numbers - preserve exact value
+        const val = value?.trim === undefined ? value : value?.trim?.();
         const current = params.get(key) || "";
 
         if (!val || val === "all") {
@@ -24,23 +25,25 @@ export const useFilters = () => {
             changed = true;
           }
         } else {
-          if (val !== current) {
-            params.set(key, val);
+          if (String(val) !== current) {
+            params.set(key, String(val));
             changed = true;
           }
         }
       });
-      if(changed){
-        // params.set("page", "1")
-      router.push(`?${params.toString()}`, {scroll: false})
-    }
-    },[searchParams]
-
-    
+      
+      if (changed) {
+        // Reset to page 1 when filters change
+        params.set("page", "1");
+        router.push(`?${params.toString()}`, { scroll: false });
+      }
+    },
+    [searchParams, router]
   );
+  
   const clearFilters = useCallback(() => {
     router.push(window.location.pathname);
-  }, []);
+  }, [router]);
 
   return {
     searchParams,

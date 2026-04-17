@@ -5,59 +5,33 @@ import { getCurrentUser } from "@/features/auth/server/auth.queries";
 import { eq, and, isNull, desc, or, gte, SQL, like, sql } from "drizzle-orm";
 
 // 2. Define the Interface
-export interface JobFilterParams {
+export type JobFilterParams = {
   search?: string;
   jobType?: string;
   jobLevel?: string;
   workType?: string;
+  location?: string;
+  minSalary?: number;
+  maxSalary?: number;
   page?: number;
   limit?: number;
-}
+};
 
 export async function getAllJobs(filters: JobFilterParams) {
-  console.log("filers real: ", filters);
-
   const page = filters.page || 1;
   const limit = filters.limit || 9;
   const offset = (page - 1) * limit;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const conditions: SQL[] = [isNull(jobs.deletedAt)];
 
-  const conditions: (SQL | undefined)[] = [
-    isNull(jobs.deletedAt),
-    or(isNull(jobs.expiresAt), gte(jobs.expiresAt, today)),
-  ];
+  const countResult = await db
+    .select({
+      count: sql<number>`count(*)`,
+    })
+    .from(jobs)
+    .where(and(...conditions));
 
-  //search
-  if (filters?.search) {
-    // 1: react - mern stack react title , react, react thapa
-    // % - wildcard
-    // 2: company name, tags, title  - LIKE() - contains
-    // 3: OR
-
-    const searchTerm = `%${filters.search}%`;
-
-    conditions.push(
-      or(
-        like(jobs.title, searchTerm),
-        like(employers.name, searchTerm),
-        like(jobs.tags, searchTerm),
-      ),
-    );
-  }
-
-  if (filters?.jobType && filters.jobType !== "all") {
-    conditions.push(eq(jobs.jobType, filters.jobType as any));
-  }
-
-  if (filters?.jobLevel && filters.jobLevel !== "all") {
-    conditions.push(eq(jobs.jobLevel, filters.jobLevel as any));
-  }
-
-  if (filters?.workType && filters.workType !== "all") {
-    conditions.push(eq(jobs.workType, filters.workType as any));
-  }
+  const totalCount = Number(countResult[0]?.count || 0);
 
   const jobsData = await db
     .select({
@@ -77,41 +51,28 @@ export async function getAllJobs(filters: JobFilterParams) {
     })
     .from(jobs)
     .innerJoin(employers, eq(jobs.employerId, employers.id))
-    .innerJoin(users, eq(employers.id, users.id)) // Join users to get avatar
-    // .where(
-    //   and(
-    //     isNull(jobs.deletedAt),
-    //     or(isNull(jobs.expiresAt), gte(jobs.expiresAt, today)),
-    //   ),
-    // )
-    .where(and(...conditions))
-    .orderBy(desc(jobs.createdAt))
-    .limit(limit)
-    .offset(offset);
-
-    const user = await getCurrentUser();
-let favoriteSet = new Set<number>();
-
-if (user) {
-  const favs = await db
-    .select()
-    .from(favoriteJobs)
-    .where(eq(favoriteJobs.applicantId, user.id));
-
-  favoriteSet = new Set(favs.map((f) => f.jobId));
-}
-
-  // 2. Fetch the total count for pagination math
-  const countResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(jobs)
-    .innerJoin(employers, eq(jobs.employerId, employers.id))
     .innerJoin(users, eq(employers.id, users.id))
-    .where(and(...conditions));
+    .where(and(...conditions))
+    .limit(limit)
+    .offset(offset)
+    .orderBy(desc(jobs.createdAt));
 
-  const totalCount = Number(countResult[0]?.count || 0);
+  // current user
+  const user = await getCurrentUser();
 
-  // Return both the data and the total count
+  let favoriteSet = new Set<number>();
+
+  if (user) {
+    const favorites = await db
+      .select({
+        jobId: favoriteJobs.jobId,
+      })
+      .from(favoriteJobs)
+      .where(eq(favoriteJobs.applicantId, user.id));
+
+    favoriteSet = new Set(favorites.map((fav) => fav.jobId));
+  }
+
   return {
     jobs: jobsData.map((job) => ({
       ...job,
@@ -119,6 +80,11 @@ if (user) {
     })),
     totalCount,
   };
+}
+
+// Helper function for lte (less than or equal)
+function lte(column: any, value: number) {
+  return sql`${column} <= ${value}`;
 }
 
 // Ensure the type only extracts the job object shape for JobCards
@@ -134,7 +100,7 @@ export async function getJobById(jobId: number) {
       // Basic Info
       id: jobs.id,
       title: jobs.title,
-      description: jobs.description, // Full HTML description
+      description: jobs.description,
       tags: jobs.tags,
 
       // Salary Details
@@ -143,35 +109,32 @@ export async function getJobById(jobId: number) {
       salaryCurrency: jobs.salaryCurrency,
       salaryPeriod: jobs.salaryPeriod,
 
-      // Job Meta Data (Crucial for Sidebar)
+      // Job Meta Data
       location: jobs.location,
-      jobType: jobs.jobType, // e.g. "remote"
-      workType: jobs.workType, // e.g. "full-time"
-      jobLevel: jobs.jobLevel, // e.g. "senior"
-      experience: jobs.experience, // e.g. "3-5 years"
-      minEducation: jobs.minEducation, // e.g. "bachelors"
+      jobType: jobs.jobType,
+      workType: jobs.workType,
+      jobLevel: jobs.jobLevel,
+      experience: jobs.experience,
+      minEducation: jobs.minEducation,
 
       // Timestamps
       createdAt: jobs.createdAt,
       expiresAt: jobs.expiresAt,
 
-      // Employer Info (Joined)
+      // Employer Info
       companyLogo: users.avatarUrl,
       companyName: employers.name,
-      companyBio: employers.description, // Good to show "About Company"
+      companyBio: employers.description,
       companyWebsite: employers.websiteUrl,
       companyLocation: employers.location,
     })
     .from(jobs)
     .innerJoin(employers, eq(jobs.employerId, employers.id))
     .innerJoin(users, eq(employers.id, users.id))
-    .where(eq(jobs.id, jobId)) // 🎯 Filter by the specific ID
-    .limit(1); // We only want one result
+    .where(eq(jobs.id, jobId))
+    .limit(1);
 
-  // Return the first item (or undefined if not found)
   return job[0];
 }
 
-
-// 🪄 Create the Type for the Details Page
 export type JobDetailsType = Awaited<ReturnType<typeof getJobById>>;
