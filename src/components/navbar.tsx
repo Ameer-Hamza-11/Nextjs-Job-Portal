@@ -49,7 +49,7 @@ export default async function Navbar() {
                 Find Job
               </Link>
               <Link
-                href="/employers"
+                href="/dashboard/employers"
                 className="hover:text-blue-600 transition-colors"
               >
                 Employers

@@ -5,6 +5,7 @@ import {
   Bookmark,
   Settings,
   Plus,
+  User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -78,6 +79,12 @@ export const applicantNavItems: NavItem[] = [
     name: "Home",
     href: "/dashboard",
     icon: LayoutDashboard,
+    exact: true, // Exact match only for home
+  },
+  {
+    name: "Employers",
+    href: "/dashboard/employers",
+    icon: User,
     exact: true, // Exact match only for home
   },
   {
