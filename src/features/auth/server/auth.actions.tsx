@@ -55,7 +55,7 @@ export const registerUserAction = async (data: RegisterUserData) => {
     }
 
     const hashPassword = await argon2.hash(password);
-    console.log("hashPassword: ", hashPassword);
+
 
     await db.transaction(async (tx) => {
       const [result] = await tx

@@ -21,6 +21,7 @@ export const JobFilters = () => {
   const { createAlert } = useJobAlerts();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   
+  // Simple state initialization - no complex refs
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [jobType, setJobType] = useState(searchParams.get("jobType") || "");
   const [jobLevel, setJobLevel] = useState(searchParams.get("jobLevel") || "");
@@ -29,227 +30,227 @@ export const JobFilters = () => {
   const [minSalary, setMinSalary] = useState(searchParams.get("minSalary") || "");
   const [maxSalary, setMaxSalary] = useState(searchParams.get("maxSalary") || "");
 
+  // Update local state when URL params change (for clear all functionality)
+  useEffect(() => {
+    setSearch(searchParams.get("search") || "");
+    setJobType(searchParams.get("jobType") || "");
+    setJobLevel(searchParams.get("jobLevel") || "");
+    setWorkType(searchParams.get("workType") || "");
+    setLocation(searchParams.get("location") || "");
+    setMinSalary(searchParams.get("minSalary") || "");
+    setMaxSalary(searchParams.get("maxSalary") || "");
+  }, [searchParams]);
+
   // Handle search with debounce
   useEffect(() => {
-    const timer = setTimeout(() => updateFilters({ search }), 500);
+    const timer = setTimeout(() => {
+      updateFilters({ search: search || null });
+    }, 500);
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Handle salary with debounce - Fixed to preserve the full value
+  // Handle minSalary with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Only update if values are different from URL
-      const currentMin = searchParams.get("minSalary") || "";
-      const currentMax = searchParams.get("maxSalary") || "";
-      
-      if (minSalary !== currentMin || maxSalary !== currentMax) {
-        updateFilters({ minSalary, maxSalary });
-      }
+      updateFilters({ minSalary: minSalary || null });
     }, 500);
     return () => clearTimeout(timer);
-  }, [minSalary, maxSalary]);
+  }, [minSalary]);
+
+  // Handle maxSalary with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateFilters({ maxSalary: maxSalary || null });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [maxSalary]);
 
   // Handle immediate filter updates for selects
   const handleJobTypeChange = (val: string) => {
     const newValue = val === "all" ? "" : val;
     setJobType(newValue);
-    updateFilters({ jobType: newValue });
+    updateFilters({ jobType: newValue || null });
   };
 
   const handleJobLevelChange = (val: string) => {
     const newValue = val === "all" ? "" : val;
     setJobLevel(newValue);
-    updateFilters({ jobLevel: newValue });
+    updateFilters({ jobLevel: newValue || null });
   };
 
   const handleWorkTypeChange = (val: string) => {
     const newValue = val === "all" ? "" : val;
     setWorkType(newValue);
-    updateFilters({ workType: newValue });
+    updateFilters({ workType: newValue || null });
   };
 
   const handleLocationChange = (val: string) => {
     const newValue = val === "all" ? "" : val;
     setLocation(newValue);
-    updateFilters({ location: newValue });
+    updateFilters({ location: newValue || null });
   };
 
   const handleClearAll = () => {
-    setSearch("");
-    setJobType("");
-    setJobLevel("");
-    setWorkType("");
-    setLocation("");
-    setMinSalary("");
-    setMaxSalary("");
     clearFilters();
     setIsMobileFiltersOpen(false);
   };
 
   const hasActiveFilters = !!(search || jobType || jobLevel || workType || location || minSalary || maxSalary);
 
-  const FilterContent = () => (
-    <div className="space-y-4">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-        <Input
-          placeholder="Search by title, skill, or company..."
-          className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-
-      {/* Salary Range */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Salary Range (per year)</label>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="Min Salary"
-              className="pl-10 h-11 bg-gray-50"
-              value={minSalary}
-              onChange={(e) => {
-                // Allow only numbers
-                const value = e.target.value.replace(/[^0-9]/g, '');
-                setMinSalary(value);
-              }}
-            />
-          </div>
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="Max Salary"
-              className="pl-10 h-11 bg-gray-50"
-              value={maxSalary}
-              onChange={(e) => {
-                // Allow only numbers
-                const value = e.target.value.replace(/[^0-9]/g, '');
-                setMaxSalary(value);
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Filters Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Select value={jobType || "all"} onValueChange={handleJobTypeChange}>
-          <SelectTrigger className="h-11 bg-gray-50 text-sm">
-            <SelectValue placeholder="Job Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {JOB_TYPE.map((type) => (
-              <SelectItem key={type} value={type} className="capitalize">
-                {type.replace(/-/g, " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={jobLevel || "all"} onValueChange={handleJobLevelChange}>
-          <SelectTrigger className="h-11 bg-gray-50 text-sm">
-            <SelectValue placeholder="Job Level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Levels</SelectItem>
-            {JOB_LEVEL.map((level) => (
-              <SelectItem key={level} value={level} className="capitalize">
-                {level.replace(/-/g, " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={workType || "all"} onValueChange={handleWorkTypeChange}>
-          <SelectTrigger className="h-11 bg-gray-50 text-sm">
-            <SelectValue placeholder="Work Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Work Styles</SelectItem>
-            {WORK_TYPE.map((type) => (
-              <SelectItem key={type} value={type} className="capitalize">
-                {type.replace(/-/g, " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={location || "all"} onValueChange={handleLocationChange}>
-          <SelectTrigger className="h-11 bg-gray-50 text-sm">
-            <SelectValue placeholder="Location" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Cities</SelectItem>
-            <SelectItem value="Karachi">Karachi</SelectItem>
-            <SelectItem value="Lahore">Lahore</SelectItem>
-            <SelectItem value="Islamabad">Islamabad</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-wrap items-center gap-3 pt-2">
-        <Button
-          size="default"
-          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
-          onClick={() => setIsMobileFiltersOpen(false)}
-        >
-          <Search className="h-4 w-4" />
-          Apply Filters
-        </Button>
-
-        <Button
-          variant="outline"
-          size="default"
-          className="gap-2 border-green-200 text-green-600 hover:bg-green-50"
-          onClick={() => {
-            createAlert({
-              keywords: search || null,
-              location: location || null,
-              jobType: jobType || null,
-              jobLevel: jobLevel || null,
-              workType: workType || null,
-              minSalary: minSalary ? parseInt(minSalary) : null,
-              maxSalary: maxSalary ? parseInt(maxSalary) : null,
-            });
-            toast.success("Job alert created successfully!");
-          }}
-        >
-          <Filter className="h-4 w-4" />
-          Save Job Alert
-        </Button>
-
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="default"
-            onClick={handleClearAll}
-            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Clear All
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <>
       {/* Desktop Filters */}
       <div className="hidden lg:block">
         <div className="rounded-xl bg-white p-5 shadow-sm border border-gray-100">
-          <FilterContent />
+          <div className="space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Search by title, skill, or company..."
+                className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            {/* Salary Range */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-700">Salary Range (per year)</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Min Salary"
+                    className="pl-10 h-11 bg-gray-50"
+                    value={minSalary}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      setMinSalary(value);
+                    }}
+                  />
+                </div>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Max Salary"
+                    className="pl-10 h-11 bg-gray-50"
+                    value={maxSalary}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      setMaxSalary(value);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Filters Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <Select value={jobType || "all"} onValueChange={handleJobTypeChange}>
+                <SelectTrigger className="h-11 bg-gray-50 text-sm">
+                  <SelectValue placeholder="Job Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {JOB_TYPE.map((type) => (
+                    <SelectItem key={type} value={type} className="capitalize">
+                      {type.replace(/-/g, " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={jobLevel || "all"} onValueChange={handleJobLevelChange}>
+                <SelectTrigger className="h-11 bg-gray-50 text-sm">
+                  <SelectValue placeholder="Job Level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  {JOB_LEVEL.map((level) => (
+                    <SelectItem key={level} value={level} className="capitalize">
+                      {level.replace(/-/g, " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={workType || "all"} onValueChange={handleWorkTypeChange}>
+                <SelectTrigger className="h-11 bg-gray-50 text-sm">
+                  <SelectValue placeholder="Work Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Work Styles</SelectItem>
+                  {WORK_TYPE.map((type) => (
+                    <SelectItem key={type} value={type} className="capitalize">
+                      {type.replace(/-/g, " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={location || "all"} onValueChange={handleLocationChange}>
+                <SelectTrigger className="h-11 bg-gray-50 text-sm">
+                  <SelectValue placeholder="Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cities</SelectItem>
+                  <SelectItem value="Karachi">Karachi</SelectItem>
+                  <SelectItem value="Lahore">Lahore</SelectItem>
+                  <SelectItem value="Islamabad">Islamabad</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Button
+                size="default"
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                onClick={() => setIsMobileFiltersOpen(false)}
+              >
+                <Search className="h-4 w-4" />
+                Apply Filters
+              </Button>
+
+              <Button
+                variant="outline"
+                size="default"
+                className="gap-2 border-green-200 text-green-600 hover:bg-green-50"
+                onClick={() => {
+                  createAlert({
+                    keywords: search || null,
+                    location: location || null,
+                    jobType: jobType || null,
+                    jobLevel: jobLevel || null,
+                    workType: workType || null,
+                    minSalary: minSalary ? parseInt(minSalary) : null,
+                    maxSalary: maxSalary ? parseInt(maxSalary) : null,
+                  });
+                  toast.success("Job alert created successfully!");
+                }}
+              >
+                <Filter className="h-4 w-4" />
+                Save Job Alert
+              </Button>
+
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="default"
+                  onClick={handleClearAll}
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear All
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -286,7 +287,155 @@ export const JobFilters = () => {
                 </button>
               </div>
               <div className="p-5 overflow-y-auto max-h-[70vh]">
-                <FilterContent />
+                <div className="space-y-4">
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Input
+                      placeholder="Search by title, skill, or company..."
+                      className="pl-10 h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Salary Range */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-gray-700">Salary Range (per year)</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Min Salary"
+                          className="pl-10 h-11 bg-gray-50"
+                          value={minSalary}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, '');
+                            setMinSalary(value);
+                          }}
+                        />
+                      </div>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Max Salary"
+                          className="pl-10 h-11 bg-gray-50"
+                          value={maxSalary}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, '');
+                            setMaxSalary(value);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Filters Grid */}
+                  <div className="grid grid-cols-1 gap-3">
+                    <Select value={jobType || "all"} onValueChange={handleJobTypeChange}>
+                      <SelectTrigger className="h-11 bg-gray-50 text-sm">
+                        <SelectValue placeholder="Job Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        {JOB_TYPE.map((type) => (
+                          <SelectItem key={type} value={type} className="capitalize">
+                            {type.replace(/-/g, " ")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={jobLevel || "all"} onValueChange={handleJobLevelChange}>
+                      <SelectTrigger className="h-11 bg-gray-50 text-sm">
+                        <SelectValue placeholder="Job Level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Levels</SelectItem>
+                        {JOB_LEVEL.map((level) => (
+                          <SelectItem key={level} value={level} className="capitalize">
+                            {level.replace(/-/g, " ")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={workType || "all"} onValueChange={handleWorkTypeChange}>
+                      <SelectTrigger className="h-11 bg-gray-50 text-sm">
+                        <SelectValue placeholder="Work Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Work Styles</SelectItem>
+                        {WORK_TYPE.map((type) => (
+                          <SelectItem key={type} value={type} className="capitalize">
+                            {type.replace(/-/g, " ")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={location || "all"} onValueChange={handleLocationChange}>
+                      <SelectTrigger className="h-11 bg-gray-50 text-sm">
+                        <SelectValue placeholder="Location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Cities</SelectItem>
+                        <SelectItem value="Karachi">Karachi</SelectItem>
+                        <SelectItem value="Lahore">Lahore</SelectItem>
+                        <SelectItem value="Islamabad">Islamabad</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <Button
+                      size="default"
+                      className="bg-blue-600 hover:bg-blue-700 text-white gap-2 flex-1"
+                      onClick={() => setIsMobileFiltersOpen(false)}
+                    >
+                      <Search className="h-4 w-4" />
+                      Apply Filters
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="default"
+                      className="gap-2 border-green-200 text-green-600 hover:bg-green-50 flex-1"
+                      onClick={() => {
+                        createAlert({
+                          keywords: search || null,
+                          location: location || null,
+                          jobType: jobType || null,
+                          jobLevel: jobLevel || null,
+                          workType: workType || null,
+                          minSalary: minSalary ? parseInt(minSalary) : null,
+                          maxSalary: maxSalary ? parseInt(maxSalary) : null,
+                        });
+                        toast.success("Job alert created successfully!");
+                      }}
+                    >
+                      <Filter className="h-4 w-4" />
+                      Save Alert
+                    </Button>
+                  </div>
+
+                  {hasActiveFilters && (
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      onClick={handleClearAll}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Clear All Filters
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </>

@@ -1,48 +1,64 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 export const useFilters = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isUpdating = useRef(false);
 
   const getParams = () => new URLSearchParams(searchParams.toString());
 
   const updateFilters = useCallback(
-    (newParams: Record<string, string | null>) => {
+    (newParams: Record<string, string | number | null>) => {
+      // Prevent multiple rapid updates
+      if (isUpdating.current) return;
+      
       const params = getParams();
       let changed = false;
 
       Object.entries(newParams).forEach(([key, value]) => {
-        // Don't trim numbers - preserve exact value
-        const val = value?.trim === undefined ? value : value?.trim?.();
+        let val: string | null = null;
+        if (value !== null && value !== undefined) {
+          val = String(value);
+        }
+        
         const current = params.get(key) || "";
 
-        if (!val || val === "all") {
+        if (!val || val === "all" || val === "null") {
           if (params.has(key)) {
             params.delete(key);
             changed = true;
           }
         } else {
-          if (String(val) !== current) {
-            params.set(key, String(val));
+          if (val !== current) {
+            params.set(key, val);
             changed = true;
           }
         }
       });
       
       if (changed) {
-        // Reset to page 1 when filters change
+        isUpdating.current = true;
         params.set("page", "1");
         router.push(`?${params.toString()}`, { scroll: false });
+        
+        // Reset the flag after a short delay
+        setTimeout(() => {
+          isUpdating.current = false;
+        }, 100);
       }
     },
     [searchParams, router]
   );
   
   const clearFilters = useCallback(() => {
+    isUpdating.current = true;
     router.push(window.location.pathname);
+    setTimeout(() => {
+      isUpdating.current = false;
+    }, 100);
   }, [router]);
 
   return {

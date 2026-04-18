@@ -6,7 +6,7 @@ import {
   ApplicantSettingsSchema,
 } from "../applicant.schema";
 import { db } from "@/config/db";
-import { applicants, employers, favoriteJobs, jobAlerts, jobs, resumes, users } from "@/drizzle/schema";
+import { applicants, employers, favoriteJobs, jobAlerts, jobApplications, jobs, resumes, users } from "@/drizzle/schema";
 import { and, count, desc, eq, InferSelectModel, isNull, like, or, SQL } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -232,7 +232,7 @@ export const getAllCounts = async () => {
     const user = await getCurrentUser();
     if (!user) return { status: "ERROR", message: "Unauthorized" };
 
-    const totalAppliedJobs = await await db.select({ count: count() }).from(applicants).where(eq(applicants.id, user.id));
+    const totalAppliedJobs = await await db.select({ count: count() }).from(jobApplications).where(eq(jobApplications.applicantId, user.id));
 
     const totalSavedJobs = await db.select({ count: count() }).from(favoriteJobs).where(eq(favoriteJobs.applicantId, user.id));
 
